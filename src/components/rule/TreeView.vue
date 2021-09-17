@@ -215,7 +215,7 @@ export default {
         onRefresh(data){
             this.m3.ruleGet(data.key).then( (rtn)=>{
                 this.$set(data, 'nodes', rtn.message.nodes);
-            } );
+            });
         },
         onNodeClick(data){
             

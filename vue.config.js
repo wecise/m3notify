@@ -1,6 +1,8 @@
 const webpack = require('webpack')
 const WebpackZipPlugin = require('webpack-zip-plugin')
 const path = require('path')
+const IS_PROD = process.env.NODE_ENV === 'production'
+
 function resolve(dir) {
     return path.join(__dirname, dir)
 }
@@ -19,8 +21,32 @@ module.exports = {
 
     configureWebpack: config => {
         // 生产环境
-        if (process.env.NODE_ENV === 'production') {
+        if (IS_PROD) {
+            
+            // 开启分离js
+            /* config.optimization = {
+                runtimeChunk: 'single',
+                splitChunks: {
+                    chunks: 'all',
+                    maxInitialRequests: Infinity,
+                    minSize: 20000,
+                    cacheGroups: {
+                    vendor: {
+                        test: /[\\/]node_modules[\\/]/,
+                        name (module) {
+                        // get the name. E.g. node_modules/packageName/not/this/part.js
+                        // or node_modules/packageName
+                        const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)[1]
+                        // npm package names are URL-safe, but some servers don't like @ symbols
+                        return `npm.${packageName.replace('@', '')}`
+                        }
+                    }
+                    }
+                }
+            } */
+
             return {
+                
                 plugins: [
                     new webpack.ProvidePlugin({
         
@@ -31,7 +57,7 @@ module.exports = {
                         zipName: process.env.VUE_APP_M3_APP+'.zip',
                         //frontShell: 'sed -i \'\' \'s/src="/src="\\/static\\/app\\/matrix\\/m3event/g\; s/href="/href="\\/static\\/app\\/matrix\\/m3event/g\' ./app/matrix/m3event/index.html',
                         //frontShell: 'sed -i \'\' \'s/src="/src="\\/static\\/app\\/matrix\\/m3event/g\; s/href="/href="\\/static\\/app\\/matrix\\/m3event/g\' ./app/matrix/m3event/index.html',
-                        behindShell: './deploy.sh ' + process.env.VUE_APP_M3_HOST + ' ' + process.env.VUE_APP_M3_COMPANY + ' ' + process.env.VUE_APP_M3_USERNAME + ' "' + process.env.VUE_APP_M3_PASSWORD + '" ' + process.env.VUE_APP_M3_APP+".zip"
+                        behindShell: './deploy.sh ' + process.env.VUE_APP_M3_HOST + ' ' + process.env.VUE_APP_M3_COMPANY + ' ' + process.env.VUE_APP_M3_USERNAME + ' "' + process.env.VUE_APP_M3_PASSWORD + '" ' + process.env.VUE_APP_M3_APP
                     })
                 ]
             }
@@ -39,7 +65,7 @@ module.exports = {
       },
 
       chainWebpack(config) {
-        
+
         // set svg-sprite-loader
         config.module
           .rule('svg')

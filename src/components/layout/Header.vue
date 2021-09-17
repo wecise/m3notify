@@ -119,15 +119,18 @@ export default{
 </script>
 
 <style>
-    .dark .m3 > .el-header{
+    .dark .m3 > .header{
         height: 50px!important;
         line-height: 50px;
         /* background: rgb(37, 45, 71); */
         background: #252D47;
         color: #ffffff;
         padding: 0px 0px 0px 10px;
+        position: fixed;
+        width: 100%;
+        z-index: 1000;
     }
-    .light .m3 > .el-header{
+    .light .m3 > .header{
         height: 50px!important;
         line-height: 50px;
         /* background: rgb(37, 45, 71); */
@@ -135,7 +138,7 @@ export default{
         color: #ffffff;
         padding: 0px 0px 0px 10px;
     }
-    .m3 > .el-header .el-image > .el-image__inner{
+    .m3 > .header .el-image > .el-image__inner{
         max-width: 120px;
         min-width: 32px;
         width: 64px;

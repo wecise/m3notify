@@ -1,48 +1,84 @@
 <template>
-  <el-container class="m3 event-console">
-    <el-header>
-        <Header :auth="auth" v-if="auth"></Header>
-      </el-header>
-    <el-main>
-      <MainView :global="global" v-if="global"></MainView>
-    </el-main>
-  </el-container>
+
+  <div class="m3 event-console">
+    <Header :auth="auth" v-if="auth && layout.header.show" class="header"></Header>
+    <div :class="layout.header.show ? 'main' : 'main-fullscreen'">
+      <SideBar v-if="auth && layout.sidebar.show" class="sidebar" :auth="auth" :global="global"></SideBar>
+      <MainView :global="global" v-if="global" class="content"></MainView>
+    </div>
+    <Footer :auth="auth" v-if="auth && layout.footer.show" class="footer"></Footer>
+  </div>
 </template>
 
 <script>
 
 import MainView from './components/MainView';
 import Header from './components/layout/Header';
+import SideBar from './components/layout/SideBar';
+import Footer from './components/layout/Footer';
 
 export default {
   name: 'app',
   components: {
     Header,
+    SideBar,
+    Footer,
     MainView
   },
   data(){
     return {
       global:null,
-      auth: null
+      auth: null,
+      layout: {
+        header: {
+          show: true
+        },
+        sidebar: {
+          show: true
+        },
+        footer: {
+          show: false
+        }
+      }
     }
   },
   mounted(){
     setTimeout(()=>{
       this.global = this.m3.global;
       this.auth = this.m3.auth.signedUser;
-    },500)
+    },1500)
+
+    this.eventHub.$on("layout-change",(data)=>{
+      this.layout = data;
+    })
   }
 }
 </script>
 
 <style>
   body{
-    overflow: hidden!important;
     font-size: 12px;
     font-family: "PingFang SC",Arial,"Microsoft YaHei",sans-serif;
     margin: 0px;
     padding: 0px;
+    overflow: hidden;
   }
+  
+  .el-menu .svg-icon{
+    width: 1.2em!important;
+    height: 1.2em!important;
+    padding: 0px 5px 0 0;
+  }
+
+  .main{
+    padding-top: 50px;
+    display: flex;
+  }
+
+  .main-fullscreen{
+    display: flex;
+  }
+
   
   .el-table .el-table__body td {
       padding: 3px;

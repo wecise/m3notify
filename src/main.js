@@ -3,7 +3,6 @@ import App from './App.vue'
 import Cookies from 'js-cookie'
 import './plugins/element.js'
 import VueI18n from 'vue-i18n'
-import ElementUI from 'element-ui'
 //import enLang from 'element-ui/lib/locale/lang/en'
 const themeColor = {dark:'#252D47',light:'#409EFF'};
 const theme = Cookies.get("m3-theme")?themeColor[Cookies.get("m3-theme")]:'#252D47';// dark:#252D47 & blue:#409EFF  default theme is dark
@@ -17,6 +16,7 @@ import './icons'
 Vue.use(VueSplit);
 Vue.use(animate);
 Vue.use(VueI18n);
+
 
 Vue.prototype.moment = moment;
 Vue.prototype.moment.locale(window.M3_LANG);
@@ -39,9 +39,6 @@ Vue.prototype.openLoading = function(target) {
 };
 
 Vue.config.productionTip = false;
-
-// ElementUI Setup
-ElementUI.Tooltip.props.openDelay.default = 1000;
 
 /* 
  * 测试环境
