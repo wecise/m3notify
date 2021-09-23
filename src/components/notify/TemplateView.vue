@@ -92,7 +92,7 @@
             </el-form-item>
             
             <el-form-item label="模版定义" prop="content">
-              <editor
+              <VueEditor
                   v-model="dialog.template.data.content"
                   @init="onEditorInit"
                   :lang="editor.lang.value"
@@ -101,7 +101,7 @@
                   height="calc(100vh - 425px)"
                   style="border:1px solid #f2f2f2;"
                   ref="editorRef"
-              ></editor>
+              ></VueEditor>
             </el-form-item>
             <el-form-item label="状态" prop="status">
               <el-switch
@@ -136,7 +136,7 @@ export default {
   },
   components:{
     TagView,
-    editor:require("vue2-ace-editor"),
+    VueEditor: require("vue2-ace-editor"),
     DatasourceView,
     DataFieldsView
   },

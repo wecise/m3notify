@@ -6,6 +6,7 @@ company=$2
 username=$3
 password=$4
 target="$5.zip"
+title=$6
 
 auth="$company.$username:$password"
 hostPreFix="http://"
@@ -14,7 +15,7 @@ dfs="/app/matrix/$5"
 
 # AppStore
 fileName="/matrix/m3appstore/appStoreAuto.js"
-fileForm="input={\"action\": \"c\",\"param\":{ \"name\": \"$target\", \"title\": \"$5\", \"version\": \"v0.5\", \"author\": \"wecise\", \"dfs\": \"$dfs\" }}"
+fileForm="input={\"action\": \"c\",\"param\":{ \"name\": \"$target\", \"title\": \"$title\", \"version\": \"v0.5\", \"author\": \"wecise\", \"dfs\": \"$dfs\" }}"
 
 if [[ $hostTerm =~ $hostPreFix ]] 
 then

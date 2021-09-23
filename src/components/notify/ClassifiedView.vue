@@ -50,18 +50,25 @@
                           </el-input>
                       </el-form-item-->
                       
-                      <el-form-item label="场景" prop="situation">
+                      <el-form-item label="场景条件" prop="situation">
+                        <el-tabs value="base" type="border-card">
+                          <el-tab-pane label="基本" name="base">
+                              <props-view></props-view>
+                          </el-tab-pane>
+                          <el-tab-pane label="高级" name="adv">
+                              <VueEditor
+                                  v-model="dialog.classified.data.situation"
+                                  @init="onEditorInit"
+                                  :lang="editor.lang.value"
+                                  :theme="editor.theme.value"
+                                  width="inherit"
+                                  height="calc(100vh - 450px)"
+                                  style="border:1px solid #f2f2f2;"
+                                  ref="editorRef"
+                              ></VueEditor>
+                          </el-tab-pane>
+                        </el-tabs>
                         
-                        <editor
-                            v-model="dialog.classified.data.situation"
-                            @init="onEditorInit"
-                            :lang="editor.lang.value"
-                            :theme="editor.theme.value"
-                            width="inherit"
-                            height="calc(100vh - 450px)"
-                            style="border:1px solid #f2f2f2;"
-                            ref="editorRef"
-                        ></editor>
                       </el-form-item>
 
                       <el-form-item label="状态" prop="status">
@@ -139,12 +146,14 @@
 <script>
 import TagView from '../tags/TagView';
 import _ from 'lodash';
+import PropsView from './PropsView.vue';
 
 export default {
   name: "ClassifiedView",
   components:{
-    editor:require("vue2-ace-editor"),
-    TagView
+    VueEditor: require("vue2-ace-editor"),
+    TagView,
+    PropsView
   },
   data() {
     return {

@@ -64,7 +64,7 @@
             </el-row>
         </el-header>
         <el-main style="padding:0px;">
-            <Editor
+            <VueEditor
                 v-model="editor.term"
                 @init="onEditorInit"
                 :lang="editor.lang.value"
@@ -72,7 +72,7 @@
                 width="100%"
                 height="calc(100vh - 370px)"
                 style="border:1px solid #f2f2f2;"
-            ></Editor>
+            ></VueEditor>
         </el-main>
     </el-container>
 
@@ -127,7 +127,7 @@ export default {
     }
   },
   components:{
-      Editor:require("vue2-ace-editor")
+      VueEditor: require("vue2-ace-editor")
   },
   watch:{
         'dt.rows':{

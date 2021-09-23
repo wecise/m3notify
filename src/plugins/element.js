@@ -2,9 +2,11 @@ import Vue from 'vue'
 import 'element-ui/lib/theme-chalk/index.css'
 
 import {
-    
+    Cascader,
+    CascaderPanel,
     Dialog,
     Autocomplete,
+    Badge,
     Dropdown,
     DropdownMenu,
     DropdownItem,
@@ -69,6 +71,7 @@ import {
 // Vue.use(Pagination);
 Vue.use(Dialog);
 Vue.use(Autocomplete);
+Vue.use(Badge);
 Vue.use(Dropdown);
 Vue.use(DropdownMenu);
 Vue.use(DropdownItem);
@@ -122,7 +125,7 @@ Vue.use(Rate);
 // Vue.use(CarouselItem);
 // Vue.use(Collapse);
 // Vue.use(CollapseItem);
-// Vue.use(Cascader);
+Vue.use(Cascader);
 Vue.use(ColorPicker);
 Vue.use(Transfer);
 Vue.use(Container);
@@ -138,7 +141,7 @@ Vue.use(Image);
 // Vue.use(Calendar);
 // Vue.use(Backtop);
 // Vue.use(PageHeader);
-// Vue.use(CascaderPanel);
+Vue.use(CascaderPanel);
 
 Vue.use(Loading.directive);
 
