@@ -6,12 +6,27 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <link rel="icon" href="<%= BASE_URL %>favicon.ico">
     <title><%= htmlWebpackPlugin.options.title %></title>
+    <link rel="stylesheet" type="text/css" href="/static/app/matrix/<%= process.env.VUE_APP_M3_APP %>/assets/css/loading.css" />
+    <script>
+        window.timeStart=window.timePhase=Date.now();
+        Date.prototype.format=function(f){var o={"M+":this.getMonth()+1,"d+":this.getDate(),"h+":this.getHours(),"m+":this.getMinutes(),"s+":this.getSeconds(),"S":this.getMilliseconds()};if(/(y+)/.test(f))f=f.replace(RegExp.$1,(this.getFullYear()+"").substr(4-RegExp.$1.length));for(var k in o)if(new RegExp("("+k+")").test(f))f=f.replace(RegExp.$1,RegExp.$1.length==1?o[k]:("00"+ o[k]).substr((""+ o[k]).length));return f}
+        console.odebug=console.debug;console.debug=function(){var t=Date.now();console.odebug.call(this,new Date().format("yyyy-MM-dd hh:mm:ss.S"),"("+(t-window.timePhase)+"/"+(t-window.timeStart)+")",...arguments)}
+        window.state=(s)=>{if(s){console.debug("[M3S]",s);e=document.getElementById("preload_message");if(e)e.innerHTML=s}window.timePhase=Date.now()}
+        window.state("正在加载页面...")
+    </script>
   </head>
   <body>
     <noscript>
       <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
     </noscript>
-    <div id="app"></div>
+    <div id="app">
+      <div id="preload" style="width:100vw;height:100vh;display:block;font-size:10px;">
+        <div style="width:100vw;height:80vh;display:flex;flex-flow:column nowrap;align-items:center;justify-content:center;position:relative;">
+            <div class="lds-grid"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+            <label id="preload_message" style="flex:0 0 auto;">正在加载页面...</label>
+        </div>
+    </div>
+    </div>
     <!-- built files will be auto injected -->
   </body>
 </html>

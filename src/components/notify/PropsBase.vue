@@ -1,21 +1,19 @@
 <template>
     <div v-if="model" class="box">
-        <el-select v-model="model.field" placeholder="属性" style="width:30%;">
-            <el-option :label="att.label" :value="att.value" :key="att.name" v-for="att in attrs"></el-option>
+        <el-select v-model="fieldSelected" placeholder="属性" style="width:30%;">
+            <el-option :label="att.name" :value="att" :key="att.name" v-for="att in attrs">
+                <span style="float: left">{{ att.name }}</span>
+                <span style="float: right; color: #8492a6; font-size: 13px">{{ att.ftype }}</span>
+            </el-option>
         </el-select>
         <el-select v-model="model.operator" placeholder="比较器" style="margin-left: 1px;width:15%;">
-            <el-option :label="operator.value" :value="operator.value" :key="index" v-for="(operator,index) in operators"></el-option>
+            <el-option :label="operator.value" :value="operator.value" :key="index" v-for="(operator,index) in operatorsSelected">
+                <span style="float: left">{{ operator.value }}</span>
+            </el-option>
         </el-select>
         
-        <el-select v-model="model.value" placeholder="值" style="margin-left: 1px;width:55%;" v-if="model.ftype==='string'">
-            <el-option :label="operator.value" :value="operator.value" :key="index" v-for="(operator,index) in operators"></el-option>
-        </el-select>
-         <el-select v-model="model.value" placeholder="值" style="margin-left: 1px;width:55%;" v-else-if="model.ftype==='boolean'">
-            <el-option label="" value=""></el-option>
-            <el-option label="是" value="true"></el-option>
-            <el-option label="否" value="false"></el-option>
-        </el-select>
-        <el-input placeholder="值" v-model="model.value" style="margin-left: 1px;width:55%;" v-else></el-input>
+        
+        <el-input placeholder="值" v-model="model.value" style="margin-left: 1px;width:55%;"></el-input>
 
          <el-button type="success" icon="el-icon-minus" @click="onRemove(model)" style="margin-left: 10px;"></el-button>
          <el-button type="danger" icon="el-icon-plug" @click="onNew">+</el-button>
@@ -30,34 +28,136 @@
         },
         data(){
             return {
-                operators: [{
-                    type: 'string',
-                    value: ''
-                },
+                fieldSelected: null,
+                operatorsSelected: [],
+                operators: 
                 {
-                    type: 'string',
-                    value: '>'
-                },
-                {
-                    type: 'string',
-                    value: '<'
-                },
-                {
-                    type: 'string',
-                    value: '='
-                },
-                {
-                    type: 'string',
-                    value: '>='
-                },
-                {
-                    type: 'string',
-                    value: '<='
-                },
-                {
-                    type: 'string',
-                    value: '!='
-                }]
+                    boolean:[{
+                        type: 'boolean',
+                        value: ''
+                    },
+                    {
+                        type: 'boolean',
+                        value: 'true'
+                    },
+                    {
+                        type: 'boolean',
+                        value: 'false'
+                    }],
+                    varchar:[{
+                        type: 'string',
+                        value: ''
+                    },
+                    {
+                        type: 'string',
+                        value: '='
+                    },
+                    {
+                        type: 'string',
+                        value: '!='
+                    },
+                    {
+                        type: 'string',
+                        value: 'like'
+                    },
+                    {
+                        type: 'string',
+                        value: 'in'
+                    }],
+                    smallint: [{
+                        type: 'string',
+                        value: ''
+                    },
+                    {
+                        type: 'string',
+                        value: '>'
+                    },
+                    {
+                        type: 'string',
+                        value: '<'
+                    },
+                    {
+                        type: 'string',
+                        value: '='
+                    },
+                    {
+                        type: 'string',
+                        value: '>='
+                    },
+                    {
+                        type: 'string',
+                        value: '<='
+                    },
+                    {
+                        type: 'string',
+                        value: '<>'
+                    }],
+                    int: [{
+                        type: 'string',
+                        value: ''
+                    },
+                    {
+                        type: 'string',
+                        value: '>'
+                    },
+                    {
+                        type: 'string',
+                        value: '<'
+                    },
+                    {
+                        type: 'string',
+                        value: '='
+                    },
+                    {
+                        type: 'string',
+                        value: '>='
+                    },
+                    {
+                        type: 'string',
+                        value: '<='
+                    },
+                    {
+                        type: 'string',
+                        value: '<>'
+                    }],
+                    timestamp: [{
+                        type: 'string',
+                        value: ''
+                    },
+                    {
+                        type: 'string',
+                        value: '>'
+                    },
+                    {
+                        type: 'string',
+                        value: '<'
+                    },
+                    {
+                        type: 'string',
+                        value: '='
+                    },
+                    {
+                        type: 'string',
+                        value: '>='
+                    },
+                    {
+                        type: 'string',
+                        value: '<='
+                    },
+                    {
+                        type: 'string',
+                        value: '!='
+                    }]
+                }
+            }
+        },
+        watch:{
+            fieldSelected(val){
+                try{
+                    this.operatorsSelected = this.operators[val.ftype];
+                }catch(err){
+                    this.operatorsSelected = this.operators['varchar'];
+                }
             }
         },
         methods: {

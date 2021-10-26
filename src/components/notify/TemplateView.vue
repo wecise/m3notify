@@ -13,11 +13,15 @@
       <el-tooltip content="导入模板">
         <el-button type="text" icon="el-icon-download"></el-button>
       </el-tooltip-->
+      <div style="position: absolute;right: 20px;top: 14px;">
+        <el-input v-model="dt.search" clearable placeholder="关键字"></el-input>
+      </div>
     </el-header>
     <el-main>
       <el-table
         :data="dt.rows"
         :row-class-name="rowClassName"
+        height="calc(100vh - 200px)"
         style="width: 100%">
         <template v-for="(item,index) in dt.columns">
             <el-table-column 
@@ -42,7 +46,7 @@
                 </template>
             </el-table-column>
         </template>
-        <el-table-column label="操作" width="200">
+        <el-table-column label="操作">
             <!-- <template slot="header">
               <el-input
                 v-model="dt.search"
@@ -52,6 +56,13 @@
             <template slot-scope="scope">
               <el-button type="text" @click="onEdit(scope.$index, scope.row)"> 编辑</el-button>
               <el-button type="text" @click="onDelete(scope.$index, scope.row)"> 删除</el-button>
+              <el-switch v-model="scope.row['status']" 
+                  active-color="#13ce66" 
+                  inactive-color="#ff4949"
+                  :active-value="1"
+                  :inactive-value="0"
+                  style="padding-left:10px;"
+                  @change="onToggleStatus(scope.row)"></el-switch>
             </template>
         </el-table-column>
       </el-table>
@@ -189,14 +200,15 @@ export default {
   },
   watch: {
     'dt.search':{
-      handler(val){
-        console.log(val)
-        if(_.isEmpty(val)){
-          this.initData();
-        }else {
-          this.dt.rows = this.dt.rows.filter(data => !val || data.name.toLowerCase().includes(val.toLowerCase()) || data.name.includes(val))
+        handler(val){
+          if(_.isEmpty(val)){
+            this.initData();
+          }else {
+            this.dt.rows = this.dt.rows.filter(data => {
+                return !val || data.name.toLowerCase().includes(val.toLowerCase())
+            })
+          }
         }
-      }
     }
   },
   created(){
@@ -277,7 +289,7 @@ export default {
       
       let param = {
                     parent: this.dialog.template.data.parent, name: [this.dialog.template.data.name,this.dialog.template.data.ftype].join(".").replace(/.json.json/,'.json'), 
-                    data: {content: this.dialog.template.data.content, type: this.dialog.template.data.ftype, attr: this.dialog.template.data.attr, index: true}    
+                    data: {content: this.dialog.template.data.content, ftype: this.dialog.template.data.ftype, attr: this.dialog.template.data.attr, index: true}    
                   };
       this.m3.dfsNew(param).then(()=>{
           this.$message({
@@ -290,6 +302,21 @@ export default {
           this.$message({
             type: "error",
             message: "新建模板失败 " + err.message
+          })
+      })  
+    },
+    onToggleStatus(row){
+      console.log(row)
+      this.dialog.template.action = "update";
+      let attr = _.extend(row.attr, {status:row.status});
+      let param = {
+                    parent: row.parent, name: [row.name,row.ftype].join(".").replace(/.json.json/,'.json'), 
+                    data: {content: row.content, ftype: row.ftype, attr: attr, index: true}    
+                  };
+      this.m3.dfsNew(param).then(()=>{
+          this.$message({
+            type: "success",
+            message: row.status ? "模板已启用" : "模板已禁用"
           })
       })  
     },
@@ -320,7 +347,6 @@ export default {
       })
     },
     onEdit(index,item){
-      console.log(index,item)
       this.dialog.template.show = true;
       this.dialog.template.data = item;
       this.dialog.template.action = "update";
@@ -331,9 +357,7 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-  .el-container{
-    height: calc(100vh - 220px)!important;
-  }
+  
   .el-header{
     height:40px!important;
     line-height:40px;

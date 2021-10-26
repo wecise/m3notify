@@ -13,14 +13,17 @@
       <el-tooltip content="导入规则">
         <el-button type="text" icon="el-icon-download"></el-button>
       </el-tooltip-->
+      <div style="position: absolute;right: 20px;top: 14px;">
+        <el-input v-model="dt.search" clearable placeholder="关键字"></el-input>
+      </div>
     </el-header>
     <el-main>
       <el-table
         :data="dt.rows"
         stripe
+        height="calc(100vh - 200px)"
         :row-class-name="rowClassName"
-        style="width: 100%"
-        v-if="dt.rows.length > 0">
+        style="width: 100%">
         <template v-for="(item,index) in dt.columns">
             <el-table-column 
                 :prop="item.field"
@@ -71,15 +74,17 @@
             </el-table-column>
         </template>
         <el-table-column label="操作" width="200">
-          <!-- <template slot="header">
-            <el-input
-              v-model="dt.search"
-              clearable
-              placeholder="关键字搜索"/>
-          </template> -->
+          
           <template slot-scope="scope">
             <el-button type="text"  @click="onEdit(scope.row)"> 编辑</el-button>
             <el-button type="text"  @click="onDelete(scope.row)"> 删除</el-button>
+            <el-switch v-model="scope.row['status']" 
+              active-color="#13ce66" 
+              inactive-color="#ff4949"
+              :active-value="1"
+              :inactive-value="0"
+              style="padding-left:10px;"
+              @change="onToggleStatus(scope.row)"></el-switch>
           </template>
         </el-table-column>
       </el-table>
@@ -88,7 +93,6 @@
         :visible.sync="dialog.rule.show"
         :append-to-body="true"
         class="notifyRule-dialog"
-        @show="init"
         v-if="dialog.rule.show">
         <el-form :model="dialog.rule.data"  :rules="dialog.rule.rules" ref="notifyRuleForm" label-width="100px">
           <el-form-item label="名称" prop="name">
@@ -136,7 +140,8 @@
               active-color="#13ce66"
               inactive-color="#dddddd"
               :active-value="1"
-              :inactive-value="0">>
+              :inactive-value="0"
+              @change="onToggleStatus(dialog.rule.data)">
             </el-switch>
           </el-form-item>
           <el-form-item label="模版" prop="template">
@@ -246,9 +251,16 @@ export default {
         if(_.isEmpty(val)){
           this.initData();
         }else {
-          this.dt.rows = this.dt.rows.filter(data => !val || data.name.toLowerCase().includes(val.toLowerCase()))
+          this.dt.rows = this.dt.rows.filter(data => {
+              return !val || data.name.toLowerCase().includes(val.toLowerCase()) || data.emails.includes(val.toLowerCase()) || data.phones.includes(val.toLowerCase())
+          })
         }
       }
+    },
+    'dialog.rule.show'(val){
+        if(val){
+          this.init();
+        }
     }
   },
   created(){
@@ -291,7 +303,7 @@ export default {
       })
     },
     rowClassName({rowIndex}){
-        return `row-${rowIndex}`;
+        return `notifyRule-row-${rowIndex}`;
     },
     onRefresh(){
       this.initData();
@@ -383,6 +395,21 @@ export default {
       this.dialog.rule.data.template = _.find(this.templates.list, {fullname: _.values(item.template)[0]});
       this.dialog.rule.action = "update";
       this.dialog.rule.show = true;
+    },
+    onToggleStatus(row){
+      this.dialog.rule.action = "update";
+      let param = encodeURIComponent(JSON.stringify({
+                    action: this.dialog.rule.action,
+                    model: row
+                  }));
+      this.m3.callFS("/matrix/m3event/notify/ruleAction.js",param).then(()=>{
+          
+          this.$message({
+            type: "success",
+            message: row.status ? "规则已启用" : "规则已停止"
+          })
+
+      });
     }
   }
 };
@@ -390,9 +417,7 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-  .el-container{
-    height: calc(100vh - 220px)!important;
-  }
+  
   .el-header{
     height:40px!important;
     line-height:40px;

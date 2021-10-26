@@ -17,10 +17,10 @@
 
 <script>
 import NotifyRuleView from './NotifyRuleView';
-import TemplateView from './TemplateView';
-import MediaView from './MediaView';
-import ClassifiedView from './ClassifiedView';
-import SetupView from './SetupView';
+// import TemplateView from './TemplateView';
+// import MediaView from './MediaView';
+// import ClassifiedView from './ClassifiedView';
+// import SetupView from './SetupView';
 
 export default {
   name: "NotifyView",
@@ -29,10 +29,10 @@ export default {
   },
   components: {
     NotifyRuleView,
-    TemplateView,
-    MediaView,
-    ClassifiedView,
-    SetupView
+    TemplateView: resolve => {require(['./TemplateView.vue'], resolve)},
+    MediaView: resolve => {require(['./MediaView.vue'], resolve)},
+    ClassifiedView: resolve => {require(['./ClassifiedView.vue'], resolve)},
+    SetupView: resolve => {require(['./SetupView.vue'], resolve)}
   },
   data() {
     return {
@@ -66,9 +66,7 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-  .el-container{
-    height: calc(100vh - 115px);
-  }
+  
   .el-main{
     overflow: hidden;
   }

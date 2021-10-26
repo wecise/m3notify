@@ -82,7 +82,11 @@ export default {
             }
         },1000),
         onNodeClick(data){
-            this.$emit('node-click',data);
+            let param = encodeURIComponent(data.class);
+            this.m3.callFS("/matrix/entity/entity_class_fields.js", param).then(res=>{
+                _.extend(data, {fields: res.message});
+                this.$emit('node-click',data);
+            })
         }
     }
 }

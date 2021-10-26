@@ -8,7 +8,9 @@
             inactive-value="or">
         </el-switch>
         
-        <props-base :model="attr"  v-for="(attr,index) in attrs" :key="index"
+        <props-base 
+            :attrs="fields"
+            :model="attr"  v-for="(attr,index) in attrs" :key="index"
             @new-prop="onNewProp"
             @remove-prop="onRemoveProp"></props-base>
 
@@ -20,6 +22,9 @@
 import PropsBase from './PropsBase.vue'
     export default {
         components: { PropsBase },
+        props: {
+            fields: Array
+        },
         data(){
             return {
                 attrs: [{

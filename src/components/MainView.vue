@@ -5,7 +5,7 @@
 <script>
 
 
-import NotifyView from './notify/NotifyView';
+//import NotifyView from './notify/NotifyView';
 
 
 export default {
@@ -14,7 +14,7 @@ export default {
     global: Object
   },
   components:{
-    NotifyView
+    NotifyView: resolve => {require(['./notify/NotifyView.vue'], resolve)}
   },
   data() {
     return {

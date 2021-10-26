@@ -49,11 +49,31 @@
                               </el-dropdown>
                           </el-input>
                       </el-form-item-->
+
+                      <el-form-item label="数据源">
+                          <el-input v-model="dialog.classified.datasource.class" disabled>
+                              <el-dropdown slot="prepend">
+                                  <span class="el-dropdown-link">
+                                      <i class="el-icon-coin el-icon--right" style="cursor:pointer;"></i>
+                                  </span>
+                                  <el-dropdown-menu slot="dropdown">
+                                      <DatasourceView :root="dialog.classified.datasource.root" 
+                                          @node-click="onDataSourceSelect"></DatasourceView>
+                                  </el-dropdown-menu>
+                              </el-dropdown>
+                          </el-input>
+                      </el-form-item>
+
+                      <!-- <el-form-item label="属性" v-if="dialog.classified.datasource">
+                          <DataFieldsView :fields="dialog.classified.datasource.data.fields" 
+                              @fields-change="onDataFieldsSelect"
+                              @node-click="onDataFieldsSelect"></DataFieldsView>
+                      </el-form-item> -->
                       
                       <el-form-item label="场景条件" prop="situation">
                         <el-tabs value="base" type="border-card">
                           <el-tab-pane label="基本" name="base">
-                              <props-view></props-view>
+                              <props-view :fields="dialog.classified.datasource.data.fields" v-if="dialog.classified.datasource.data"></props-view>
                           </el-tab-pane>
                           <el-tab-pane label="高级" name="adv">
                               <VueEditor
@@ -98,11 +118,15 @@
                     <el-tooltip content="导出">
                       <el-button type="text" icon="el-icon-download"></el-button>
                     </el-tooltip>
+                    <div style="position: absolute;right: 20px;top: 14px;">
+                      <el-input v-model="dt.search" clearable placeholder="关键字"></el-input>
+                    </div>
                   </el-header>
                   <el-main  style="padding:0px;height:100%;">
                     <el-table
                       :data="dt.rows"
                       :row-class-name="rowClassName"
+                      height="calc(100vh - 220px)"
                       style="width: 100%">
                       <template v-for="(item,index) in dt.columns">
                           <el-table-column 
@@ -131,6 +155,13 @@
                         <template slot-scope="scope">
                           <el-button type="text" @click="onEdit(scope.$index, scope.row)"> 编辑</el-button>
                           <el-button type="text" @click="onDelete(scope.$index, scope.row)"> 删除</el-button>
+                          <el-switch v-model="scope.row['status']" 
+                              active-color="#13ce66" 
+                              inactive-color="#ff4949"
+                              :active-value="1"
+                              :inactive-value="0"
+                              style="padding-left:10px;"
+                              @change="onToggleStatus(scope.row)"></el-switch>
                         </template>
                       </el-table-column>
                     </el-table>
@@ -144,8 +175,9 @@
 </template>
 
 <script>
-import TagView from '../tags/TagView';
 import _ from 'lodash';
+import TagView from '../tags/TagView';
+import DatasourceView from './DatasourceView';
 import PropsView from './PropsView.vue';
 
 export default {
@@ -153,7 +185,8 @@ export default {
   components:{
     VueEditor: require("vue2-ace-editor"),
     TagView,
-    PropsView
+    PropsView,
+    DatasourceView
   },
   data() {
     return {
@@ -167,11 +200,18 @@ export default {
       dt: {
         rows:[],
         columns: [],
-        selected: []
+        selected: [],
+        search: ""
       },
       dialog:{
         classified:{
             show: false,
+            datasource: {
+                root: "/matrix/devops",
+                fields: [],
+                class: "",
+                data: null
+            },
             data: {
               name: "",
               parent:"-1",
@@ -199,6 +239,19 @@ export default {
           }
       }
     };
+  },
+  watch:{
+    'dt.search':{
+        handler(val){
+          if(_.isEmpty(val)){
+            this.initData();
+          }else {
+            this.dt.rows = this.dt.rows.filter(data => {
+                return !val || data.name.toLowerCase().includes(val.toLowerCase())
+            })
+          }
+        }
+    }
   },
   created(){
      this.initData();
@@ -246,7 +299,6 @@ export default {
       this.dialog.classified.show = true;
     },
     onEdit(index,row){
-      console.log(index)
       this.dialog.classified.show = true;
       this.dialog.classified.data = row;
       this.dialog.classified.action = "update";
@@ -282,8 +334,7 @@ export default {
     },
     onSave(){
       let param = encodeURIComponent( JSON.stringify({action: this.dialog.classified.action, model:this.dialog.classified.data}) );
-      this.m3.callFS("/matrix/m3event/notify/situationAction.js",param).then(res=>{
-        console.log(res)
+      this.m3.callFS("/matrix/m3event/notify/situationAction.js",param).then(()=>{
         this.$message({
             type: "success",
             message: this.dialog.classified.action=='add'?"新建成功":'更新成功'
@@ -297,11 +348,41 @@ export default {
           })
       }) 
     },
+    onToggleStatus(row){
+      this.dialog.classified.action = "update";
+      let param = encodeURIComponent(JSON.stringify({
+                    action: this.dialog.classified.action,
+                    model: row
+                  }));
+      this.m3.callFS("/matrix/m3event/notify/situationAction.js",param).then(()=>{
+          
+          this.$message({
+            type: "success",
+            message: row.status ? "场景已启用" : "场景已禁用"
+          })
+
+      });
+    },
     onMouseEnter(data){
       this.$set(data, 'show', true)
     },
     onMouseLeave(data){
       this.$set(data, 'show', false)
+    },
+    /* 数据源选择切换 */
+    onDataSourceSelect(data){
+      this.dialog.classified.datasource.class = data.class;
+      this.dialog.classified.datasource.data = data;
+
+      // let content = JSON.parse(this.dialog.classified.data.content);
+      // content.class = data.class;
+      // this.dialog.classified.data.content = JSON.stringify(content,null,2);
+    },
+    onDataFieldsSelect(data){
+        this.dialog.classified.datasource.fields = data;
+        let content = JSON.parse(this.dialog.classified.data.content);
+        content.fields = data;
+        this.dialog.classified.data.content = JSON.stringify(content,null,2);
     },
     initEditor(){
         let editor = this.$refs.editorRef.editor;
@@ -323,14 +404,7 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-  .el-container{
-    height: calc(100vh - 220px)!important;
-  }
-  .el-header{
-    height:40px!important;
-    line-height:40px;
-    background: #f2f2f2;
-  }
+  
   .el-main{
     padding:0px;
     overflow: hidden;

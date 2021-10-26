@@ -39,7 +39,7 @@ module.exports = {
                         zipName: process.env.VUE_APP_M3_APP+'.zip',
                         //frontShell: 'sed -i \'\' \'s/src="/src="\\/static\\/app\\/matrix\\/m3event/g\; s/href="/href="\\/static\\/app\\/matrix\\/m3event/g\' ./app/matrix/m3event/index.html',
                         //frontShell: 'sed -i \'\' \'s/src="/src="\\/static\\/app\\/matrix\\/m3event/g\; s/href="/href="\\/static\\/app\\/matrix\\/m3event/g\' ./app/matrix/m3event/index.html',
-                        behindShell: './deploy.sh ' + process.env.VUE_APP_M3_HOST + ' ' + process.env.VUE_APP_M3_COMPANY + ' ' + process.env.VUE_APP_M3_USERNAME + ' "' + process.env.VUE_APP_M3_PASSWORD + '" ' + process.env.VUE_APP_M3_APP + ' ' + process.env.VUE_APP_M3_TITLE
+                        behindShell: './deploy.sh ' + process.env.VUE_APP_M3_HOST + ' ' + process.env.VUE_APP_M3_COMPANY + ' ' + process.env.VUE_APP_M3_USERNAME + ' "' + process.env.VUE_APP_M3_PASSWORD + '" ' + process.env.VUE_APP_M3_APP + ' ' + process.env.VUE_APP_M3_TITLE + ' ' + process.env.VUE_APP_M3_VERSION
                     })
                 ]
             }
@@ -48,31 +48,6 @@ module.exports = {
 
       chainWebpack(config) {
 
-        config.optimization.splitChunks({
-            chunks: 'all',
-            maxSize: 3000000,
-            maxInitialRequests:30,
-            cacheGroups: {
-                libs: {
-                    name: 'chunk-libs',
-                    test: /[\\/]node_modules[\\/]/,
-                    priority: 10,
-                    chunks: 'initial' // only package third parties that are initially dependent
-                },
-                brace: {
-                    name: 'chunk-brace', // split brace into a single package
-                    priority: 20, // the weight needs to be larger than libs and app or it will be packaged into libs or app
-                    test: /[\\/]node_modules[\\/]_?brace(.*)/ // in order to adapt to cnpm
-                },
-                commons: {
-                    name: 'chunk-commons',
-                    test: resolve('src/components'), // can customize your rules
-                    minChunks: 3, //  minimum common number
-                    priority: 5,
-                    reuseExistingChunk: true
-                }
-            }
-        })
         
         // ============压缩图片 start============
         config.module
