@@ -4,13 +4,13 @@
       <el-tooltip content="刷新">
         <el-button type="text" icon="el-icon-refresh" @click="onRefresh"></el-button>
       </el-tooltip>
-      <el-tooltip content="新建规则">
+      <el-tooltip content="新建策略">
         <el-button type="text" icon="el-icon-plus" @click="onNew"></el-button>
       </el-tooltip>
-      <!--el-tooltip content="导出规则">
+      <!--el-tooltip content="导出策略">
         <el-button type="text" icon="el-icon-upload2"></el-button>
       </el-tooltip>
-      <el-tooltip content="导入规则">
+      <el-tooltip content="导入策略">
         <el-button type="text" icon="el-icon-download"></el-button>
       </el-tooltip-->
       <div style="position: absolute;right: 20px;top: 0px;">
@@ -90,9 +90,9 @@
           </template>
         </el-table-column>
       </el-table>
-      <!-- 新建规则 -->
+      <!-- 新建策略 -->
       <el-dialog
-        title="新建规则"
+        title="新建策略"
         :visible.sync="dialog.rule.new.show"
         :close-on-click-modal="false"
         :close-on-press-escape="false"
@@ -112,8 +112,12 @@
               style="width:100%;"
               >              
               <template slot-scope="{ node, data }">
-                <span v-if="data.username==='/'">所有组</span>
-                <span v-else>{{ data.username }}</span>
+                <span v-if="data.username==='/'">{{m3.auth.Company.fullname}}</span>
+                <span v-else>{{ (data.firstname || "") + (data.lastname || "") ||  data.username }} 
+                    <span class="el-icon-platform-eleme" style="color:#999;font-size:8px;padding-left: 5px;" v-if="data.email"> {{ data.email.join(" ") }}</span>
+                    <span class="el-icon-phone" style="color:#999;font-size:8px;padding-left: 5px;" v-if="data.mobile"> {{ data.mobile.join(" ") }}</span>
+                    <span class="el-icon-message-solid" style="color:#999;font-size:8px;padding-left: 5px;" v-if="data.wechat"> {{ data.wechat }}</span>
+                </span>
                 <span v-if="!node.isLeaf && data.nodes.length>0"> ({{ data.nodes.length }})</span>
               </template>
               </el-cascader>
@@ -153,25 +157,26 @@
               </el-option>
             </el-select>
           </el-form-item>
+        
+          <el-form-item label="状态" prop="status">
+              <el-switch
+                v-model="dialog.rule.new.data.status"
+                active-color="#13ce66"
+                inactive-color="#dddddd"
+                :active-value="1"
+                :inactive-value="0"
+                @change="onToggleStatus(dialog.rule.new.data)">
+              </el-switch>
+          </el-form-item>
         </el-form>
-        <el-form-item label="状态" prop="status">
-            <el-switch
-              v-model="dialog.rule.new.data.status"
-              active-color="#13ce66"
-              inactive-color="#dddddd"
-              :active-value="1"
-              :inactive-value="0"
-              @change="onToggleStatus(dialog.rule.new.data)">
-            </el-switch>
-        </el-form-item>
         <span slot="footer" class="dialog-footer">
           <el-button @click="dialog.rule.new.show = false">取 消</el-button>
           <el-button type="primary" @click="onSave" :loading="dialog.rule.new.loading">确 定</el-button>
         </span>
       </el-dialog>
-      <!-- 规则管理 -->
+      <!-- 策略管理 -->
       <el-dialog
-        title="规则管理"
+        title="策略管理"
         :visible.sync="dialog.rule.edit.show"
         :append-to-body="true"
         class="notifyRule-dialog"
@@ -189,13 +194,17 @@
               style="width:100%;"
               >              
               <template slot-scope="{ node, data }">
-                <span v-if="data.username==='/'">所有组</span>
-                <span v-else>{{ data.username }}</span>
+                <span v-if="data.username==='/'">{{m3.auth.Company.fullname}}</span>
+                <span v-else>{{ (data.firstname || "") + (data.lastname || "") ||  data.username }} 
+                    <span class="el-icon-platform-eleme" style="color:#999;font-size:8px;padding-left: 5px;" v-if="data.email"> {{ data.email.join(" ") }}</span>
+                    <span class="el-icon-phone" style="color:#999;font-size:8px;padding-left: 5px;" v-if="data.mobile"> {{ data.mobile.join(" ") }}</span>
+                    <span class="el-icon-message-solid" style="color:#999;font-size:8px;padding-left: 5px;" v-if="data.wechat"> {{ data.wechat }}</span>
+                </span>
                 <span v-if="!node.isLeaf && data.nodes.length>0"> ({{ data.nodes.length }})</span>
               </template>
               </el-cascader>
           </el-form-item>
-          <el-form-item label="类型" prop="rtype">
+          <el-form-item label="通知类型" prop="rtype">
             <el-select v-model="dialog.rule.edit.data.rtype" multiple placeholder="请选择" style="width:100%;">
               <el-option
                 v-for="item in rtype.list"
@@ -207,7 +216,7 @@
               </el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="场景" prop="situation">
+          <el-form-item label="通知规则" prop="situation">
             <el-select v-model="dialog.rule.edit.data.situation" placeholder="请选择">
               <el-option
                 v-for="item in situation.list"
@@ -215,11 +224,13 @@
                 :label="item.name"
                 :value="item.id">
                 <span style="float: left">{{ item.name }}</span>
-                <span style="float: right; color: #8492a6; font-size: 8px">{{ item.status }}</span>
+                <span style="float: right; color: #8492a6; font-size: 8px">
+                  <span class="el-icon-tickets" style="color:#999;font-size:8px;padding-left: 5px;" v-if="item.situation"> {{ item.situation }}</span>
+                </span>
               </el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="模版" prop="template">
+          <el-form-item label="通知模版" prop="template">
             <el-select v-model="dialog.rule.edit.data.template" placeholder="请选择">
               <el-option
                 v-for="item in templates.list"
@@ -230,17 +241,18 @@
               </el-option>
             </el-select>
           </el-form-item>
+        
+          <el-form-item label="状态" prop="status">
+              <el-switch
+                v-model="dialog.rule.edit.data.status"
+                active-color="#13ce66"
+                inactive-color="#dddddd"
+                :active-value="1"
+                :inactive-value="0"
+                @change="onToggleStatus(dialog.rule.edit.data)">
+              </el-switch>
+          </el-form-item>
         </el-form>
-        <el-form-item label="状态" prop="status">
-            <el-switch
-              v-model="dialog.rule.edit.data.status"
-              active-color="#13ce66"
-              inactive-color="#dddddd"
-              :active-value="1"
-              :inactive-value="0"
-              @change="onToggleStatus(dialog.rule.edit.data)">
-            </el-switch>
-        </el-form-item>
         <span slot="footer" class="dialog-footer">
           <el-button @click="dialog.rule.edit.show = false">取 消</el-button>
           <el-button type="primary" @click="onUpdate" :loading="dialog.rule.edit.loading">更 新</el-button>
@@ -289,13 +301,14 @@ export default {
       persons: {
         props: {
           value: 'id',
-          label: 'username',
+          label: 'flname',
           children: 'nodes',
           multiple: true,
           emitPath: false,
           checkStrictly: true
         },
-        list: []
+        list: [],
+        userList: []
       },
       situation:{
         list: []
@@ -426,18 +439,25 @@ export default {
     },
     // 递归判断列表，把最后的children设为undefined
     travelUserTree(data){
+      
       for(var i=0;i<data.length;i++){
+        data[i].flname = (data[i]['firstname'] || "")+(data[i]['lastname'] || "") || data[i]['username'];
         if(data[i].nodes.length<1){
           data[i].nodes = undefined;
         }else {
           this.travelUserTree(data[i].nodes);
-        }
+        } 
       }
       return data;
     },
     init(){
+
+      this.m3.callFS("/matrix/m3system/ldap/ldap.js").then(rtn=>{
+          this.persons.userList = rtn.message;
+      })
+
       this.m3.user.list().then(rtn=>{
-        this.persons.list = this.travelUserTree(rtn.message);
+        this.persons.list = this.travelUserTree(rtn.message.nodes);
       })
 
       this.m3.callFS("/matrix/m3event/notify/getTemplateList.js").then(rtn=>{
@@ -445,8 +465,8 @@ export default {
       })
 
       let param = encodeURIComponent( JSON.stringify({action:'list'}) );
-      this.m3.callFS("/matrix/m3event/notify/situationAction.js",param).then(res=>{
-        this.situation.list = res.message.rows;
+      this.m3.callFS("/matrix/m3event/notify/situationAction.js",param).then(rtn=>{
+        this.situation.list = rtn.message.rows;
       })
     },
     rowClassName({rowIndex}){
@@ -502,7 +522,7 @@ export default {
           
           this.$message({
             type: "success",
-            message: "新建规则成功"
+            message: "新建策略成功"
           })
           this.onReset('new');
           this.initData();
@@ -512,13 +532,13 @@ export default {
         }).catch(err=>{
           this.$message({
             type: "error",
-            message: "新建规则失败 " + err
+            message: "新建策略失败 " + err
           })
         });
     },
     onDelete(item){
       
-      this.$confirm(`确认要删除该规则：${item.name}？`, '提示', {
+      this.$confirm(`确认要删除该策略：${item.name}？`, '提示', {
                         confirmButtonText: '确定',
                         cancelButtonText: '取消',
                         type: 'error'
@@ -532,7 +552,7 @@ export default {
           
           this.$message({
                 type: 'success',
-                message: '删除规则成功!'
+                message: '删除策略成功!'
           })
 
           this.initData();
@@ -542,7 +562,7 @@ export default {
           
           this.$message({
               type: 'error',
-              message: '删除规则失败 ' + err.message
+              message: '删除策略失败 ' + err.message
           });
 
           this.loading = false;
@@ -588,7 +608,7 @@ export default {
         this.m3.callFS("/matrix/m3event/notify/ruleAction.js",param).then(res=>{
           this.$message({
             type: "success",
-            message: "规则更新成功"
+            message: "策略更新成功"
           })
           this.initData();
           this.dialog.rule.edit.loading = false;
@@ -597,7 +617,7 @@ export default {
         }).catch(err=>{
           this.$message({
             type: "error",
-            message: "规则更新失败 " + err
+            message: "策略更新失败 " + err
           })
           this.dialog.rule.edit.loading = false;
         });
@@ -611,7 +631,7 @@ export default {
           
           this.$message({
             type: "success",
-            message: row.status ? "规则已启用" : "规则已停止"
+            message: row.status ? "策略已启用" : "策略已停止"
           })
 
       });

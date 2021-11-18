@@ -9,7 +9,7 @@
         </el-switch>
         <props-base 
             :attrs="fields"
-            :model="attr"  v-for="attr in attrs" :key="attr.name"
+            :model="attr"  v-for="(attr,index) in attrs" :key="attr.name"
             @new-prop="onNewProp"
             @remove-prop="onRemoveProp"
             ref="props"></props-base>
@@ -19,7 +19,6 @@
 </template>
 
 <script>
-import _ from 'lodash'
 import PropsBase from './PropsBase.vue'
     export default {
         components: { PropsBase },

@@ -1,85 +1,63 @@
 {
   "name": "m3notify",
-  "version": "0.8.0",
-  "private": true,
+  "version": "1.0.0",
+  "author": "wecise",
+  "license": "MIT",
+  "description": "M³ Applet",
+  "keywords": [
+    "M³"
+  ],
+  "main": "src/index.js",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wecise/m3js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/wecise/m3js/issues"
+  },
+  "homepage": "https://github.com/wecise/m3js#readme",
   "dependencies": {
-    "@handsontable/vue": "^8.4.0",
     "@iarna/toml": "^2.2.5",
-    "@wecise/m3js": "^1.0.38",
+    "@vue/composition-api": "^1.2.4",
+    "@wecise/m3js": "^1.0.172",
     "animate.css": "^4.1.1",
-    "core-js": "^3.6.5",
-    "dns": "^0.2.2",
-    "element-ui": "^2.15.1",
-    "file-saver": "^2.0.5",
-    "handsontable": "^8.4.0",
-    "howler": "^2.2.1",
-    "jquery": "^3.5.1",
+    "axios": "^0.23.0",
+    "brace": "^0.11.1",
+    "echarts": "^5.2.1",
+    "element-ui": "^2.15.6",
+    "howler": "^2.2.3",
+    "jquery": "^3.6.0",
+    "js-beautify": "^1.14.0",
     "js-cookie": "^2.2.1",
     "lodash": "^4.17.21",
     "moment": "^2.29.1",
-    "papaparse": "^5.3.0",
-    "sortablejs": "^1.10.2",
+    "mxgraph": "^4.2.2",
+    "prettify": "^0.1.7",
     "svg-sprite-loader": "^6.0.2",
-    "uglifyjs-webpack-plugin": "^2.2.0",
     "vue": "^2.6.14",
     "vue-awesome-countdown": "^1.1.4",
     "vue-context": "^6.0.0",
-    "vue-echarts": "^6.0.0-rc.6",
+    "vue-echarts": "^6.0.0",
     "vue-grid-layout": "^2.3.12",
     "vue-i18n": "^8.22.3",
     "vue-json-editor": "^1.4.3",
-    "vue-router": "^3.2.0",
-    "vue-runtime-helpers": "^1.1.2",
+    "vue-router": "^3.5.3",
     "vue-split-panel": "^1.0.4",
-    "vue2-countdown": "^1.0.8",
-    "vuedraggable": "^2.24.3",
-    "vuex": "^3.4.0"
-  },
-  "devDependencies": {
-    "@vue/cli-plugin-babel": "^4.5.12",
-    "@vue/cli-plugin-eslint": "~4.5.0",
-    "@vue/cli-plugin-router": "~4.5.0",
-    "@vue/cli-plugin-vuex": "~4.5.0",
-    "@vue/cli-service": "~4.5.0",
-    "@vue/composition-api": "^1.0.0-rc.14",
-    "babel-eslint": "^10.1.0",
-    "babel-plugin-component": "^1.1.1",
-    "compression-webpack-plugin": "^5.0.2",
-    "eslint": "^6.7.2",
-    "eslint-plugin-vue": "^6.2.2",
-    "image-webpack-loader": "^7.0.1",
-    "node-sass": "^5.0.0",
-    "sass-loader": "^10.1.1",
-    "vue-cli-plugin-axios": "^0.0.4",
-    "vue-cli-plugin-element": "^1.0.1",
     "vue-template-compiler": "^2.6.14",
     "vue2-ace-editor": "^0.0.15",
-    "webpack-zip-plugin": "^0.1.6",
-    "xlsx": "^0.17.2"
+    "vuedraggable": "^2.24.3"
   },
-  "eslintConfig": {
-    "root": true,
-    "env": {
-      "node": true,
-      "jquery": true
-    },
-    "extends": [
-      "plugin:vue/essential",
-      "eslint:recommended"
-    ],
-    "parserOptions": {
-      "parser": "babel-eslint"
-    },
-    "rules": {}
-  },
-  "browserslist": [
-    "> 1%",
-    "last 2 versions",
-    "not dead"
-  ]
+  "devDependencies": {
+    "@vue/cli-plugin-router": "~4.5.0",
+    "@vue/cli-service": "~4.5.0",
+    "compression-webpack-plugin": "^5.0.2",
+    "papaparse": "^5.3.1",
+    "uglifyjs-webpack-plugin": "^2.2.0",
+    "webpack-zip-plugin": "^0.1.6"
+  }
 }

@@ -1,0 +1,76 @@
+<template>
+  
+      <el-tabs v-model="tabs.activeTab" type="border-card">
+          <el-tab-pane :name="item.name" :key="item.name" v-for="item in tabs.list" lazy>
+            <span slot="label">{{item.title}} <span @click="onTip(item)" class="el-icon-question" v-if="item.desc"></span></span>
+            <NotifyRuleView v-if="item.name==='rule'"></NotifyRuleView>
+            <ClassifiedView v-else-if="item.name==='classified'"></ClassifiedView>
+            <TemplateView v-else-if="item.name==='template'"></TemplateView>
+            <SetupView v-else-if="item.name==='setup'"></SetupView>
+            <NotifyLog v-else></NotifyLog>
+          </el-tab-pane>
+      </el-tabs>
+  
+</template>
+
+<script>
+import NotifyRuleView from './NotifyRuleView';
+
+export default {
+  name: "NotifyView",
+  props: {
+    model: Object
+  },
+  components: {
+    NotifyRuleView,
+    TemplateView: resolve => {require(['./TemplateView.vue'], resolve)},
+    ClassifiedView: resolve => {require(['./ClassifiedView.vue'], resolve)},
+    SetupView: resolve => {require(['./SetupView.vue'], resolve)},
+    NotifyLog: resolve => {require(['./NotifyLog.vue'], resolve)}
+  },
+  data() {
+    return {
+      tabs: {
+          activeTab: 'rule',
+          list: [
+            {name:'rule',title:'通知策略',type:'rule',data: null, desc: '设置告警通知策略，规则包括：接收人员设置、通知类型设置、通知规则、状态设置、通知模版设置'},
+            {name:'classified',title:'通知规则',type:'classified',data: null, desc: '场景即为分类管理，具体定义了通知内容的筛选条件。例如：severity=5 and status=10 定义了通知内容为级别=5并且状态=10的告警才发送通知 '},
+            {name:'template',title:'通知模版',type:'template',data: null, desc: '模版定义了通知的内容模版，支持HTML语法'},
+            {name:'setup',title:'发送设置',type:'setup',data: null, desc: '定义了发送服务的具体配置信息，比如邮件SMTP服务器地址等信息'},
+            {name:'logs',title:'发送日志',type:'logs',data: null, desc: '发送日志信息'}
+          ]
+      }
+    };
+  },
+  methods: {
+    onTip(item){
+        if(!item.desc) return false;
+        
+        const h = this.$createElement;
+        this.$notify({
+          title: item.title,
+          duration: 15*1000,
+          position: 'top-right',
+          message: h('i', { style: 'color: teal'}, item.desc)
+        });
+    }
+  }
+};
+</script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped>
+    .el-input--mini .el-input__inner {
+        border: none!important;
+    }
+
+    .el-tabs--border-card {
+      -webkit-box-shadow: unset;
+      box-shadow: unset;
+    }
+
+    .el-tabs--border-card /deep/ .el-tabs__content {
+        padding: 0px;
+    }
+
+</style>
