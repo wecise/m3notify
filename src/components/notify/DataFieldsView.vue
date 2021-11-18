@@ -30,7 +30,7 @@ export default {
         fields: {
             handler(val){
                 this.options = _.map(val, v=>{
-                    return {value: v, label:v, children:[]};
+                    return {value: v.name, label:v.name, type: v.ftype};
                 })
             },
             immediate: true

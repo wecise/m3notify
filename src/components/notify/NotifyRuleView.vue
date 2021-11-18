@@ -1,5 +1,5 @@
 <template>
-  <el-container>
+  <el-container style="height: calc(100vh - 135px);">
     <el-header>
       <el-tooltip content="刷新">
         <el-button type="text" icon="el-icon-refresh" @click="onRefresh"></el-button>
@@ -13,7 +13,7 @@
       <el-tooltip content="导入规则">
         <el-button type="text" icon="el-icon-download"></el-button>
       </el-tooltip-->
-      <div style="position: absolute;right: 20px;top: 14px;">
+      <div style="position: absolute;right: 20px;top: 0px;">
         <el-input v-model="dt.search" clearable placeholder="关键字"></el-input>
       </div>
     </el-header>
@@ -21,9 +21,11 @@
       <el-table
         :data="dt.rows"
         stripe
-        height="calc(100vh - 200px)"
+        border
+        height="calc(100vh - 235px)"
         :row-class-name="rowClassName"
-        style="width: 100%">
+        style="width: 100%"
+        ref="table">
         <template v-for="(item,index) in dt.columns">
             <el-table-column 
                 :prop="item.field"
@@ -73,11 +75,11 @@
                 </template>
             </el-table-column>
         </template>
-        <el-table-column label="操作" width="200">
+        <el-table-column label="操作" width="160" fixed="right">
           
           <template slot-scope="scope">
             <el-button type="text"  @click="onEdit(scope.row)"> 编辑</el-button>
-            <el-button type="text"  @click="onDelete(scope.row)"> 删除</el-button>
+            <el-button type="text"  @click="onDelete(scope.row)" :loading="loading"> 删除</el-button>
             <el-switch v-model="scope.row['status']" 
               active-color="#13ce66" 
               inactive-color="#ff4949"
@@ -88,30 +90,36 @@
           </template>
         </el-table-column>
       </el-table>
+      <!-- 新建规则 -->
       <el-dialog
-        title="规则管理"
-        :visible.sync="dialog.rule.show"
+        title="新建规则"
+        :visible.sync="dialog.rule.new.show"
+        :close-on-click-modal="false"
+        :close-on-press-escape="false"
         :append-to-body="true"
         class="notifyRule-dialog"
-        v-if="dialog.rule.show">
-        <el-form :model="dialog.rule.data"  :rules="dialog.rule.rules" ref="notifyRuleForm" label-width="100px">
+        v-if="dialog.rule.new.show">
+        <el-form :model="dialog.rule.new.data"  :rules="dialog.rule.new.rules" ref="notifyRuleForm" label-width="100px">
           <el-form-item label="名称" prop="name">
-           <el-input v-model="dialog.rule.data.name" :disabled="dialog.rule.action==='update'?true:false"></el-input>
+           <el-input v-model="dialog.rule.new.data.name"></el-input>
           </el-form-item>
           <el-form-item label="接收人员" prop="persons">
             <el-cascader
-              v-model="dialog.rule.data.persons"
+              v-model="dialog.rule.new.data.persons"
               :options="persons.list"
               :props="persons.props"
-              clearable>              
+              clearable
+              style="width:100%;"
+              >              
               <template slot-scope="{ node, data }">
-                <span>{{ data.username }}</span>
+                <span v-if="data.username==='/'">所有组</span>
+                <span v-else>{{ data.username }}</span>
                 <span v-if="!node.isLeaf && data.nodes.length>0"> ({{ data.nodes.length }})</span>
               </template>
               </el-cascader>
           </el-form-item>
           <el-form-item label="类型" prop="rtype">
-            <el-select v-model="dialog.rule.data.rtype" multiple placeholder="请选择">
+            <el-select v-model="dialog.rule.new.data.rtype" multiple placeholder="请选择" style="width:100%;">
               <el-option
                 v-for="item in rtype.list"
                 :key="item.name"
@@ -123,7 +131,7 @@
             </el-select>
           </el-form-item>
           <el-form-item label="场景" prop="situation">
-            <el-select v-model="dialog.rule.data.situation" placeholder="请选择">
+            <el-select v-model="dialog.rule.new.data.situation" placeholder="请选择">
               <el-option
                 v-for="item in situation.list"
                 :key="item.id"
@@ -134,18 +142,8 @@
               </el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="状态" prop="status">
-            <el-switch
-              v-model="dialog.rule.data.status"
-              active-color="#13ce66"
-              inactive-color="#dddddd"
-              :active-value="1"
-              :inactive-value="0"
-              @change="onToggleStatus(dialog.rule.data)">
-            </el-switch>
-          </el-form-item>
           <el-form-item label="模版" prop="template">
-            <el-select v-model="dialog.rule.data.template" placeholder="请选择">
+            <el-select v-model="dialog.rule.new.data.template" placeholder="请选择">
               <el-option
                 v-for="item in templates.list"
                 :key="item.name"
@@ -156,12 +154,102 @@
             </el-select>
           </el-form-item>
         </el-form>
+        <el-form-item label="状态" prop="status">
+            <el-switch
+              v-model="dialog.rule.new.data.status"
+              active-color="#13ce66"
+              inactive-color="#dddddd"
+              :active-value="1"
+              :inactive-value="0"
+              @change="onToggleStatus(dialog.rule.new.data)">
+            </el-switch>
+        </el-form-item>
         <span slot="footer" class="dialog-footer">
-          <el-button @click="dialog.rule.show = false">取 消</el-button>
-          <el-button type="primary" @click="onSave">确 定</el-button>
+          <el-button @click="dialog.rule.new.show = false">取 消</el-button>
+          <el-button type="primary" @click="onSave" :loading="dialog.rule.new.loading">确 定</el-button>
+        </span>
+      </el-dialog>
+      <!-- 规则管理 -->
+      <el-dialog
+        title="规则管理"
+        :visible.sync="dialog.rule.edit.show"
+        :append-to-body="true"
+        class="notifyRule-dialog"
+        v-if="dialog.rule.edit.show">
+        <el-form :model="dialog.rule.edit.data"  :rules="dialog.rule.edit.rules" ref="notifyRuleForm" label-width="100px">
+          <el-form-item label="名称" prop="name">
+           <el-input v-model="dialog.rule.edit.data.name" disabled></el-input>
+          </el-form-item>
+          <el-form-item label="接收人员" prop="persons">
+            <el-cascader
+              v-model="dialog.rule.edit.data.persons"
+              :options="persons.list"
+              :props="persons.props"
+              clearable
+              style="width:100%;"
+              >              
+              <template slot-scope="{ node, data }">
+                <span v-if="data.username==='/'">所有组</span>
+                <span v-else>{{ data.username }}</span>
+                <span v-if="!node.isLeaf && data.nodes.length>0"> ({{ data.nodes.length }})</span>
+              </template>
+              </el-cascader>
+          </el-form-item>
+          <el-form-item label="类型" prop="rtype">
+            <el-select v-model="dialog.rule.edit.data.rtype" multiple placeholder="请选择" style="width:100%;">
+              <el-option
+                v-for="item in rtype.list"
+                :key="item.name"
+                :label="item.title"
+                :value="item.name">
+                <span style="float: left">{{ item.title }}</span>
+                <span style="float: right; color: #8492a6; font-size: 8px">{{ item.address }}:{{item.port}}</span>
+              </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="场景" prop="situation">
+            <el-select v-model="dialog.rule.edit.data.situation" placeholder="请选择">
+              <el-option
+                v-for="item in situation.list"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id">
+                <span style="float: left">{{ item.name }}</span>
+                <span style="float: right; color: #8492a6; font-size: 8px">{{ item.status }}</span>
+              </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="模版" prop="template">
+            <el-select v-model="dialog.rule.edit.data.template" placeholder="请选择">
+              <el-option
+                v-for="item in templates.list"
+                :key="item.name"
+                :label="item.name"
+                :value="item">
+                <span style="float: left">{{ item.name | formatName }}</span>
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-form>
+        <el-form-item label="状态" prop="status">
+            <el-switch
+              v-model="dialog.rule.edit.data.status"
+              active-color="#13ce66"
+              inactive-color="#dddddd"
+              :active-value="1"
+              :inactive-value="0"
+              @change="onToggleStatus(dialog.rule.edit.data)">
+            </el-switch>
+        </el-form-item>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="dialog.rule.edit.show = false">取 消</el-button>
+          <el-button type="primary" @click="onUpdate" :loading="dialog.rule.edit.loading">更 新</el-button>
         </span>
       </el-dialog>
     </el-main>
+    <el-footer style="height:40px;line-height:40px;background:#f2f2f2;">
+        {{ dt.info.join(' &nbsp; | &nbsp;') }}
+    </el-footer>
   </el-container>
 </template>
 
@@ -173,11 +261,13 @@ export default {
   name: "NotifyRuleView",
   data() {
     return {
+      loading: false,
       dt: {
         rows:[],
         columns: [],
         selected: [],
-        search: ""
+        search: "",
+        info:[]
       },
       rtype: {
         list: [
@@ -215,6 +305,8 @@ export default {
       },
       dialog:{
         rule:{
+          new:{
+            loading: false,
             show: false,
             data: {
               name: "",
@@ -228,8 +320,25 @@ export default {
                 name:[
                   { required: true, message: '请输入名称', trigger: 'blur' }
                 ]
+            }
+          },
+          edit:{
+            loading: false,
+            show: false,
+            data: {
+              name: "",
+              persons: null,
+              rtype: "",
+              situation: null,
+              status: 0,
+              template: null
             },
-            action: "add"            
+            rules: {
+                name:[
+                  { required: true, message: '请输入名称', trigger: 'blur' }
+                ]
+            }
+          }
         }
       }
     };
@@ -261,7 +370,29 @@ export default {
         if(val){
           this.init();
         }
-    }
+    },
+    'dt.rows': {
+          handler(val){
+
+              if(val){
+                  
+                  this.dt.info = [];
+                  this.dt.info.push(`共 ${val.length} 项`);
+                  this.dt.info.push(`已选择 ${this.dt.selected.length} 项`);
+                  this.dt.info.push(this.moment().format("YYYY-MM-DD HH:mm:ss.SSS"));
+
+              }
+          },
+          immediate:true
+      },
+      'dt.selected': {
+          handler(val){
+              this.dt.info = [];
+              this.dt.info.push(`共 ${this.dt.rows.length} 项`);
+              this.dt.info.push(`已选择 ${val.length} 项`);
+              this.dt.info.push(this.moment().format("YYYY-MM-DD HH:mm:ss.SSS"));
+          }
+      }
   },
   created(){
      this.initData();
@@ -270,6 +401,7 @@ export default {
   methods: {
     initData(){
       this.m3.callFS("/matrix/m3event/notify/getRuleList.js").then((rt)=>{
+        
         let rtn = rt.message;
 
         this.$set(this.dt,'rows', rtn.rows);
@@ -286,11 +418,26 @@ export default {
           }
           
         }));
+
+        this.$nextTick(()=>{
+          this.$refs.table.doLayout();
+        })
       })
     },
+    // 递归判断列表，把最后的children设为undefined
+    travelUserTree(data){
+      for(var i=0;i<data.length;i++){
+        if(data[i].nodes.length<1){
+          data[i].nodes = undefined;
+        }else {
+          this.travelUserTree(data[i].nodes);
+        }
+      }
+      return data;
+    },
     init(){
-      this.m3.userList().then(rtn=>{
-        this.persons.list = [rtn.message];
+      this.m3.user.list().then(rtn=>{
+        this.persons.list = this.travelUserTree(rtn.message);
       })
 
       this.m3.callFS("/matrix/m3event/notify/getTemplateList.js").then(rtn=>{
@@ -308,8 +455,8 @@ export default {
     onRefresh(){
       this.initData();
     },
-    onReset(){
-      this.dialog.rule.data = {
+    onReset(form){
+      this.dialog.rule[form].data = {
                                 name: "",
                                 persons: [],
                                 rtype: "",
@@ -319,57 +466,68 @@ export default {
                               };
     },
     onNew(){
-      this.dialog.rule.show = true;
-      this.dialog.rule.action = "add";
-      this.onReset();
+      this.dialog.rule.new.show = true;
+      this.onReset('new');
     },
     onSave(){
 
         let param = encodeURIComponent(JSON.stringify({
-                    action: this.dialog.rule.action,
-                    model: this.dialog.rule.data
+                    action: 'add',
+                    model: this.dialog.rule.new.data
                   }));
         
-        if(_.isEmpty(this.dialog.rule.data.name)){
+        if(_.isEmpty(this.dialog.rule.new.data.name)){
           this.$message.warning("请输入名称");
           return false;
         }
 
-        if(_.isEmpty(this.dialog.rule.data.persons)){
+        if(_.isEmpty(this.dialog.rule.new.data.persons)){
           this.$message.warning("请选择接收人员");
           return false;
         }
 
-        if(_.isEmpty(this.dialog.rule.data.situation)){
+        if(_.isEmpty(this.dialog.rule.new.data.situation)){
           this.$message.warning("请选择场景");
           return false;
         }
 
-        if(_.isEmpty(this.dialog.rule.data.template)){
+        if(_.isEmpty(this.dialog.rule.new.data.template)){
           this.$message.warning("请选择通知内容模版");
           return false;
         }
+
+        this.dialog.rule.new.loading = true;
 
         this.m3.callFS("/matrix/m3event/notify/ruleAction.js",param).then(()=>{
           
           this.$message({
             type: "success",
-            message: "新建规则成功！"
+            message: "新建规则成功"
           })
+          this.onReset('new');
           this.initData();
-          this.onReset();
-          this.dialog.rule.show = false;
+          this.dialog.rule.new.loading = false;
+          this.dialog.rule.new.show = false;
 
+        }).catch(err=>{
+          this.$message({
+            type: "error",
+            message: "新建规则失败 " + err
+          })
         });
     },
     onDelete(item){
+      
       this.$confirm(`确认要删除该规则：${item.name}？`, '提示', {
                         confirmButtonText: '确定',
                         cancelButtonText: '取消',
-                        type: 'warning'
+                        type: 'error'
                     }).then(() => {
         
+        this.loading = true;
+
         let param = encodeURIComponent(JSON.stringify({action:"delete",model:item}));
+
         this.m3.callFS("/matrix/m3event/notify/ruleAction.js",param).then(()=>{
           
           this.$message({
@@ -378,6 +536,7 @@ export default {
           })
 
           this.initData();
+          this.loading = false;
 
         }).catch((err)=>{
           
@@ -386,20 +545,66 @@ export default {
               message: '删除规则失败 ' + err.message
           });
 
+          this.loading = false;
+
         });
           
       })
     },
     onEdit(item){
-      this.dialog.rule.data = item;
-      this.dialog.rule.data.template = _.find(this.templates.list, {fullname: _.values(item.template)[0]});
-      this.dialog.rule.action = "update";
-      this.dialog.rule.show = true;
+      this.dialog.rule.edit.data = item;
+      this.dialog.rule.edit.data.template = _.find(this.templates.list, {fullname: _.values(item.template)[0]});
+      this.dialog.rule.edit.show = true;
+    },
+    onUpdate(){
+
+        let param = encodeURIComponent(JSON.stringify({
+                    action: 'update',
+                    model: this.dialog.rule.edit.data
+                  }));
+        
+        if(_.isEmpty(this.dialog.rule.edit.data.name)){
+          this.$message.warning("请输入名称");
+          return false;
+        }
+
+        if(_.isEmpty(this.dialog.rule.edit.data.persons)){
+          this.$message.warning("请选择接收人员");
+          return false;
+        }
+
+        if(_.isEmpty(this.dialog.rule.edit.data.situation)){
+          this.$message.warning("请选择场景");
+          return false;
+        }
+
+        if(_.isEmpty(this.dialog.rule.edit.data.template)){
+          this.$message.warning("请选择通知内容模版");
+          return false;
+        }
+
+        this.dialog.rule.edit.loading = true;
+
+        this.m3.callFS("/matrix/m3event/notify/ruleAction.js",param).then(res=>{
+          this.$message({
+            type: "success",
+            message: "规则更新成功"
+          })
+          this.initData();
+          this.dialog.rule.edit.loading = false;
+          this.dialog.rule.edit.show = false;
+
+        }).catch(err=>{
+          this.$message({
+            type: "error",
+            message: "规则更新失败 " + err
+          })
+          this.dialog.rule.edit.loading = false;
+        });
     },
     onToggleStatus(row){
-      this.dialog.rule.action = "update";
       let param = encodeURIComponent(JSON.stringify({
-                    action: this.dialog.rule.action,
+                    action: 'update',
                     model: row
                   }));
       this.m3.callFS("/matrix/m3event/notify/ruleAction.js",param).then(()=>{
@@ -423,7 +628,6 @@ export default {
     line-height:40px;
   }
   .el-main{
-    padding:0px;
     overflow: hidden;
   }
   

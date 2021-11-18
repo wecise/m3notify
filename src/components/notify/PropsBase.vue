@@ -1,7 +1,7 @@
 <template>
     <div v-if="model" class="box">
         <el-select v-model="fieldSelected" placeholder="属性" style="width:30%;">
-            <el-option :label="att.name" :value="att" :key="att.name" v-for="att in attrs">
+            <el-option :label="att.name" :value="att.name" :key="att.name" v-for="att in attrs">
                 <span style="float: left">{{ att.name }}</span>
                 <span style="float: right; color: #8492a6; font-size: 13px">{{ att.ftype }}</span>
             </el-option>
@@ -11,12 +11,9 @@
                 <span style="float: left">{{ operator.value }}</span>
             </el-option>
         </el-select>
-        
-        
         <el-input placeholder="值" v-model="model.value" style="margin-left: 1px;width:55%;"></el-input>
-
-         <el-button type="success" icon="el-icon-minus" @click="onRemove(model)" style="margin-left: 10px;"></el-button>
-         <el-button type="danger" icon="el-icon-plug" @click="onNew">+</el-button>
+         <el-button type="danger" icon="el-icon-minus" @click="onRemove(model)" style="margin-left: 10px;"></el-button>
+         <el-button type="success" icon="el-icon-plug" @click="onNew">+</el-button>
     </div>
 </template>
 
@@ -28,7 +25,7 @@
         },
         data(){
             return {
-                fieldSelected: null,
+                fieldSelected: "",
                 operatorsSelected: [],
                 operators: 
                 {
@@ -154,7 +151,10 @@
         watch:{
             fieldSelected(val){
                 try{
-                    this.operatorsSelected = this.operators[val.ftype];
+                    let field = _.find(this.attrs,{name:val});
+                    this.model.field = val;
+                    this.model.ftype = field.ftype;
+                    this.operatorsSelected = this.operators[field.ftype];
                 }catch(err){
                     this.operatorsSelected = this.operators['varchar'];
                 }

@@ -14,8 +14,11 @@
     <el-main>
       <el-table
         :data="dt.rows"
+        border
         stripe
-        style="width: 100%">
+        height="calc(100vh - 215px)"
+        style="width: 100%"
+        ref="table">
         <template v-for="(item,index) in dt.columns">
             <el-table-column 
                 :prop="item.field"
@@ -39,7 +42,7 @@
                 </template>
             </el-table-column>
         </template>
-        <el-table-column label="操作">
+        <el-table-column label="操作"  width="220" fixed="right">
           <template slot-scope="scope">
             <el-button type="text" icon="el-icon-video-play"  @click="onPlay(scope.$index, scope.row)" v-if="!scope.row.isPlay"> 播放</el-button>
             <el-button type="text" icon="el-icon-video-pause"  @click="onStop(scope.$index, scope.row)" v-else> 停止</el-button>
@@ -121,7 +124,7 @@ export default {
   methods: {
     initData(){
 
-      this.m3.dfsRead({parent: this.config.root, name: this.config.name}).then( rtn=>{
+      this.m3.dfs.read({parent: this.config.root, name: this.config.name}).then( rtn=>{
           this.config.content = JSON.parse(rtn);
       })
 
@@ -142,7 +145,11 @@ export default {
           
         }));
 
-      }) 
+        this.$nextTick(()=>{
+          this.$refs.table.doLayout();
+        })
+
+      })
     },
     onRefresh(){
       this.initData();
@@ -177,7 +184,7 @@ export default {
       }).then(() => {
                         
         let param = {parent:item.parent, name: item.name};
-        this.m3.dfsDelete(param).then(()=>{
+        this.m3.dfs.deleteFile(param).then(()=>{
             this.$message({
                 type: 'success',
                 message: '删除声音文件成功!'
@@ -204,7 +211,7 @@ export default {
                     data: { content: content, type: this.config.type, attr: "", index: true }    
                   };
       
-      this.m3.dfsWrite(param).then(()=>{
+      this.m3.dfs.write(param).then(()=>{
           this.$message({
             type: "success",
             message: "设置成功"
@@ -236,15 +243,12 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-  .el-container{
-    height: calc(100vh - 220px)!important;
-  }
+  
   .el-header{
     height:40px!important;
     line-height:40px;
   }
   .el-main{
-    padding:0px;
     overflow: hidden;
   }
 </style>

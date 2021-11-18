@@ -1,7 +1,7 @@
 <template>
-  <el-container>
+  <el-container style="height: calc(100vh - 135px);">
     <el-main>
-        <Split>
+        <Split :gutterSize="5">
             <SplitArea :size="20" :minSize="0" style="overflow:hidden;">
                 <el-tree 
                     node-key="id"
@@ -71,9 +71,11 @@
                       </el-form-item> -->
                       
                       <el-form-item label="场景条件" prop="situation">
-                        <el-tabs value="base" type="border-card">
+                        <el-tabs value="base" type="border-card" @tab-click="onTabClick">
                           <el-tab-pane label="基本" name="base">
-                              <props-view :fields="dialog.classified.datasource.data.fields" v-if="dialog.classified.datasource.data"></props-view>
+                              <props-view :fields="dialog.classified.datasource.data.fields" 
+                                @update-props="onUpdateProps"
+                                v-if="dialog.classified.datasource.data"></props-view>
                           </el-tab-pane>
                           <el-tab-pane label="高级" name="adv">
                               <VueEditor
@@ -104,7 +106,7 @@
                     </el-form>
                     
                     <span slot="footer" class="dialog-footer">
-                      <el-button @click="dialog.classified.show = false">取 消</el-button>
+                      <el-button @click="onClose">取 消</el-button>
                       <el-button type="primary" @click="onSave">确 定</el-button>
                     </span>
                   </el-dialog>
@@ -118,16 +120,19 @@
                     <el-tooltip content="导出">
                       <el-button type="text" icon="el-icon-download"></el-button>
                     </el-tooltip>
-                    <div style="position: absolute;right: 20px;top: 14px;">
+                    <div style="position: absolute;right: 10px;top: 1px;">
                       <el-input v-model="dt.search" clearable placeholder="关键字"></el-input>
                     </div>
                   </el-header>
                   <el-main  style="padding:0px;height:100%;">
                     <el-table
+                      border
+                      stripe
                       :data="dt.rows"
                       :row-class-name="rowClassName"
-                      height="calc(100vh - 220px)"
-                      style="width: 100%">
+                      height="calc(100vh - 235px)"
+                      style="width: 100%"
+                      ref="table">
                       <template v-for="(item,index) in dt.columns">
                           <el-table-column 
                               :prop="item.field"
@@ -151,7 +156,7 @@
                               </template>
                           </el-table-column>
                       </template>
-                      <el-table-column label="操作">
+                      <el-table-column label="操作"  width="180" fixed="right">
                         <template slot-scope="scope">
                           <el-button type="text" @click="onEdit(scope.$index, scope.row)"> 编辑</el-button>
                           <el-button type="text" @click="onDelete(scope.$index, scope.row)"> 删除</el-button>
@@ -170,6 +175,9 @@
             </SplitArea>
         </Split>
     </el-main>
+    <el-footer style="height:40px;line-height:40px;background:#f2f2f2;">
+        {{ dt.info.join(' &nbsp; | &nbsp;') }}
+    </el-footer>
   </el-container>
     
 </template>
@@ -201,7 +209,8 @@ export default {
         rows:[],
         columns: [],
         selected: [],
-        search: ""
+        search: "",
+        info: []
       },
       dialog:{
         classified:{
@@ -235,7 +244,7 @@ export default {
           },
           theme: {
               value: "merbivore",
-              list: this.m3.EDITOR_THEME
+              list: this.m3.theme.EDITOR_THEME
           }
       }
     };
@@ -251,7 +260,29 @@ export default {
             })
           }
         }
-    }
+    },
+    'dt.rows': {
+          handler(val){
+
+              if(val){
+                  
+                  this.dt.info = [];
+                  this.dt.info.push(`共 ${val.length} 项`);
+                  this.dt.info.push(`已选择 ${this.dt.selected.length} 项`);
+                  this.dt.info.push(this.moment().format("YYYY-MM-DD HH:mm:ss.SSS"));
+
+              }
+          },
+          immediate:true
+      },
+      'dt.selected': {
+          handler(val){
+              this.dt.info = [];
+              this.dt.info.push(`共 ${this.dt.rows.length} 项`);
+              this.dt.info.push(`已选择 ${val.length} 项`);
+              this.dt.info.push(this.moment().format("YYYY-MM-DD HH:mm:ss.SSS"));
+          }
+      }
   },
   created(){
      this.initData();
@@ -280,6 +311,11 @@ export default {
         
 
         });
+
+        this.$nextTick(()=>{
+          this.$refs.table.doLayout();
+        })
+
         let children = res.message.rows;
         this.tree.data = [{ id:"-1",parent:'/我的分类',name:'我的分类',children: children}];
       })
@@ -331,6 +367,10 @@ export default {
     },
     onRefresh(){
       this.initData();
+    },
+    onClose(){
+      this.dialog.classified.show = false;
+      this.onRefresh();
     },
     onSave(){
       let param = encodeURIComponent( JSON.stringify({action: this.dialog.classified.action, model:this.dialog.classified.data}) );
@@ -397,8 +437,16 @@ export default {
         require(`brace/snippets/${this.editor.lang.value}`); //snippet
         require(`brace/theme/${this.editor.theme.value}`); //language
         this.initEditor();
+    },
+    onUpdateProps(data){
+      this.dialog.classified.data.situation = data;
+    },
+    onTabClick(tab){
+      if(tab.name === 'adv'){
+        this.$emit('refresh-props');
+      }
     }
-  },
+  }
 };
 </script>
 
