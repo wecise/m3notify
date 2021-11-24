@@ -38,6 +38,13 @@
                   <el-form-item label="发送数量" prop="send_num">
                     <el-input-number v-model="rtype.base.send_num"></el-input-number>
                   </el-form-item>
+
+                  <el-form-item label="发送方式">
+                    <el-checkbox v-model="rtype.email.status">{{rtype.email.name}}</el-checkbox>
+                    <el-checkbox v-model="rtype.sms.status">{{rtype.sms.name}}</el-checkbox>
+                    <el-checkbox v-model="rtype.wechat.status">{{rtype.wechat.name}}</el-checkbox>
+                  </el-form-item>
+
                 </el-form>
               </el-main>
             </el-container>
