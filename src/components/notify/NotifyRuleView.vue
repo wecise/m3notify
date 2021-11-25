@@ -49,7 +49,7 @@
                     </div>
 
                     <div style="height:30px;line-height:30px;" v-else-if="item.field === 'rtype'">
-                        <el-tag v-for="subItem in scope.row[item.field]" :key="subItem" type="success" v-if="scope.row[item.field]">{{subItem}}</el-tag>
+                        <el-tag v-for="subItem in scope.row[item.field]" :key="subItem" v-if="scope.row[item.field]">{{subItem}}</el-tag>
                     </div>
                     
                     <div v-html='item.render(scope.row, scope.column, scope.row[item.field], scope.$index)' 
@@ -130,7 +130,9 @@
                 :label="item.name"
                 :value="item.id">
                 <span style="float: left">{{ item.name }}</span>
-                <span style="float: right; color: #8492a6; font-size: 8px">{{ item.status }}</span>
+                <span style="float: right; color: #8492a6; font-size: 8px">
+                  <span class="el-icon-tickets" style="color:#999;font-size:8px;padding-left: 5px;" v-if="item.situation"> {{ item.situation }}</span>
+                </span>
               </el-option>
             </el-select>
           </el-form-item>

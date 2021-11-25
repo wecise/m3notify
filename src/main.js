@@ -18,7 +18,7 @@ Vue.config.productionTip = false;
 
   
 m3.init().then(()=>{
-    Vue.prototype.$ELEMENT = { size: 'small', zIndex: 3000 };
+    Vue.prototype.$ELEMENT = { size: 'small', zIndex: 3000};
     new Vue({
         router,
         render: h => h(App)
