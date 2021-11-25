@@ -1,6 +1,6 @@
 <template>
   <el-container style="height:calc(100vh - 135px);">
-    <el-header>
+    <el-header style="position:relative;height: 40px!important;line-height: 40px!important;">
       <el-tooltip content="刷新模板">
         <el-button type="text" icon="el-icon-refresh" @click="onRefresh"></el-button>
       </el-tooltip>
@@ -13,7 +13,7 @@
       <el-tooltip content="导入模板">
         <el-button type="text" icon="el-icon-download"></el-button>
       </el-tooltip-->
-      <div style="position: absolute;right: 20px;top: 0px;">
+      <div style="position: absolute;right: 20px;top: 10px;">
         <el-input v-model="dt.search" clearable placeholder="关键字"></el-input>
       </div>
     </el-header>
@@ -23,7 +23,7 @@
         stripe
         :data="dt.rows"
         :row-class-name="rowClassName"
-        height="calc(100vh - 235px)"
+        height="calc(100vh - 255px)"
         style="width: 100%"
         ref="table">
         <template v-for="(item,index) in dt.columns">
@@ -544,10 +544,6 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
   
-  .el-header{
-    height: 40px!important;
-    line-height: 40px!important;
-  }
   .el-main{
     overflow: hidden;
   }

@@ -1,6 +1,6 @@
 <template>
   <el-container style="height: calc(100vh - 135px);">
-    <el-header>
+    <el-header style="height: 40px!important;line-height: 40px!important;position:relative;">
       <el-tooltip content="刷新">
         <el-button type="text" icon="el-icon-refresh" @click="onRefresh"></el-button>
       </el-tooltip>
@@ -13,7 +13,7 @@
       <el-tooltip content="导入策略">
         <el-button type="text" icon="el-icon-download"></el-button>
       </el-tooltip-->
-      <div style="position: absolute;right: 20px;top: 0px;">
+      <div style="position: absolute;right: 20px;top: 10px;">
         <el-input v-model="dt.search" clearable placeholder="关键字"></el-input>
       </div>
     </el-header>
@@ -22,7 +22,7 @@
         :data="dt.rows"
         stripe
         border
-        height="calc(100vh - 235px)"
+        height="calc(100vh - 255px)"
         :row-class-name="rowClassName"
         style="width: 100%"
         ref="table">
@@ -42,26 +42,14 @@
                         <TagView domain='notifyRule' :model.sync="scope.row.tags" :id="scope.row.id" :limit="1"></TagView>
                     </div>
                     
-                    <div style="height:30px;line-height:30px;" v-else-if="item.field === 'emails' || item.field === 'phones'">
-                        <el-select :value="scope.row[item.field]" v-if="scope.row[item.field]">
-                          <el-option
-                            v-for="subItem in scope.row[item.field].split(',')"
-                            :key="subItem"
-                            :label="subItem"
-                            :value="subItem">
-                          </el-option>
-                        </el-select>
+                    <div style="display:flex;flex-wrap:wrap;" v-else-if="item.field === 'people' || item.field === 'emails' || item.field === 'phones'">
+                        <el-tag v-for="(v,k) in JSON.parse(scope.row[item.field])" :key="k" v-if="scope.row[item.field]" style="margin:2px;">
+                          {{v}}
+                        </el-tag>
                     </div>
 
                     <div style="height:30px;line-height:30px;" v-else-if="item.field === 'rtype'">
-                        <el-select :value="scope.row[item.field][0]" v-if="scope.row[item.field]">
-                          <el-option
-                            v-for="subItem in scope.row[item.field]"
-                            :key="subItem"
-                            :label="subItem"
-                            :value="subItem">
-                          </el-option>
-                        </el-select>
+                        <el-tag v-for="subItem in scope.row[item.field]" :key="subItem" type="success" v-if="scope.row[item.field]">{{subItem}}</el-tag>
                     </div>
                     
                     <div v-html='item.render(scope.row, scope.column, scope.row[item.field], scope.$index)' 
@@ -191,8 +179,7 @@
               :options="persons.list"
               :props="persons.props"
               clearable
-              style="width:100%;"
-              >              
+              style="width:100%;">              
               <template slot-scope="{ node, data }">
                 <span v-if="data.username==='/'">{{m3.auth.Company.fullname}}</span>
                 <span v-else>{{ (data.firstname || "") + (data.lastname || "") ||  data.username }} 
@@ -235,9 +222,9 @@
               <el-option
                 v-for="item in templates.list"
                 :key="item.name"
-                :label="item.name"
+                :label="item.title"
                 :value="item">
-                <span style="float: left">{{ item.name | formatName }}</span>
+                <span style="float: left">{{ item.title }}</span>
               </el-option>
             </el-select>
           </el-form-item>
@@ -314,6 +301,7 @@ export default {
         list: []
       },
       templates: {
+        value: '',
         list: []
       },
       dialog:{
@@ -603,6 +591,8 @@ export default {
           return false;
         }
 
+        console.log(11212,this.dialog.rule.edit.data.template)
+
         this.dialog.rule.edit.loading = true;
 
         this.m3.callFS("/matrix/m3event/notify/ruleAction.js",param).then(res=>{
@@ -643,23 +633,15 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
   
-  .el-header{
-    height:40px!important;
-    line-height:40px;
-  }
   .el-main{
     overflow: hidden;
   }
   
-  
-</style>
-
-<style>
-  .notifyRule-dialog .el-dialog{
+  .notifyRule-dialog /deep/ .el-dialog{
     width: 70vw!important;
     height: auto;
   }
-  .el-table__body .el-input__inner{
+  .el-table__body /deep/ .el-input__inner{
     border:unset!important;
   }
 </style>

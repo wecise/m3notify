@@ -1,9 +1,10 @@
 <template>
   <el-container style="height: calc(100vh - 135px);">
-    <el-main>
+    <el-main style="padding:0px;">
         <Split :gutterSize="5">
-            <SplitArea :size="20" :minSize="0" style="overflow:hidden;">
-                <el-tree 
+            <SplitArea :size="20" :minSize="0" style="overflow:hidden;background:#f2f2f2;">
+                <TagTreeView :model="{domain:'notifySituation'}" :fun="onRefreshByTag" ref="notifySituationTagTree"></TagTreeView>
+                <!--el-tree 
                     node-key="id"
                     :data="tree.data" 
                     :props="tree.defaultProps" 
@@ -18,7 +19,7 @@
                       <el-button v-show="data.show" type="text" @click="onNew($event,data)" style="float:right;width:14px;margin:0 5px;" icon="el-icon-plus"></el-button>
                       <el-button v-show="data.show" type="text" @click="onRefresh($event,data)" style="float:right;width:14px;margin:0 5px;" icon="el-icon-refresh"></el-button>
                     </span>   
-                  </el-tree>
+                  </el-tree-->
                   <el-dialog
                     title="分类管理"
                     :visible.sync="dialog.classified.show"
@@ -113,24 +114,27 @@
             </SplitArea>
             <SplitArea :size="80" :minSize="0" style="overflow:hidden;">
                 <el-container>
-                  <el-header>
+                  <el-header style="position: relative;height:40px;line-height:40px;">
                     <el-tooltip content="刷新">
                       <el-button type="text" icon="el-icon-refresh" @click="onRefresh"></el-button>
+                    </el-tooltip>
+                    <el-tooltip content="新建规则">
+                      <el-button type="text" icon="el-icon-plus" @click="onNew"></el-button>
                     </el-tooltip>
                     <el-tooltip content="导出">
                       <el-button type="text" icon="el-icon-download"></el-button>
                     </el-tooltip>
-                    <div style="position: absolute;right: 10px;top: 1px;">
+                    <div style="position: absolute;right:20px;top: 10px;">
                       <el-input v-model="dt.search" clearable placeholder="关键字"></el-input>
                     </div>
                   </el-header>
-                  <el-main  style="padding:0px;height:100%;">
+                  <el-main>
                     <el-table
                       border
                       stripe
                       :data="dt.rows"
                       :row-class-name="rowClassName"
-                      height="calc(100vh - 235px)"
+                      height="calc(100vh - 255px)"
                       style="width: 100%"
                       ref="table">
                       <template v-for="(item,index) in dt.columns">
@@ -145,7 +149,7 @@
                               v-if="item.visible">
                               <template slot-scope="scope">
                                   <div style="height:30px;line-height:30px;" v-if="item.field=='tags'">
-                                      <TagView domain='notifyTemplate' :model.sync="scope.row.tags" :id="scope.row.id" :limit="1"></TagView>
+                                      <TagView domain='notifySituation' :model.sync="scope.row.tags" :id="scope.row.id" :limit="1"></TagView>
                                   </div>
                                   <div v-html='item.render(scope.row, scope.column, scope.row[item.field], scope.$index)' 
                                       v-else-if="typeof item.render === 'function'">
@@ -185,6 +189,7 @@
 <script>
 import _ from 'lodash';
 import TagView from '../tags/TagView';
+import TagTreeView from '../tags/TagTreeView';
 import DatasourceView from './DatasourceView';
 import PropsView from './PropsView.vue';
 
@@ -193,6 +198,7 @@ export default {
   components:{
     VueEditor: require("vue2-ace-editor"),
     TagView,
+    TagTreeView,
     PropsView,
     DatasourceView
   },
@@ -454,14 +460,10 @@ export default {
 <style scoped>
   
   .el-main{
-    padding:0px;
     overflow: hidden;
   }
-</style>
-
-
-<style>
-  .classified-dialog .el-dialog {
+  
+  .classified-dialog /deep/ .el-dialog {
     width: 70vw!important;
     height: auto;
   }
