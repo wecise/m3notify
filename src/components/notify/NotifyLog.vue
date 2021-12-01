@@ -4,11 +4,8 @@
             <el-tooltip content="刷新">
                 <el-button type="text" icon="el-icon-refresh" @click="onRefresh"></el-button>
             </el-tooltip>
-            <div style="position: absolute;right: 20px;top: 0px;">
-                <el-input v-model="dt.filter" clearable placeholder="关键字"></el-input>
-            </div>
         </el-header>
-        <el-main>
+        <el-main style="overflow: hidden;">
             <el-table
                 :loading="dt.loading"
                 stripe
@@ -31,7 +28,7 @@
                             <div v-html='item.render(scope.row, scope.column, scope.row[item.field], scope.$index)' v-if="typeof item.render === 'function'"></div>
                             <div v-else>
                                 <div v-if="item.field==='sendstatus' || item.field==='content'">
-                                    <el-input type="textarea" :rows="8" :value="renderContent(scope.row[item.field])"></el-input>
+                                    <el-input type="textarea" :rows="4" :value="renderContent(scope.row[item.field])"></el-input>
                                 </div>
                                 <div v-else>
                                     {{scope.row[item.field]}}
@@ -40,10 +37,13 @@
                         </template>
                     </el-table-column>
                 </template>
-                <el-table-column label="操作" width="220" fixed="right">
+                <el-table-column label="操作" width="260" fixed="right">
+                    <template slot="header" slot-scope="scope">
+                        <el-input v-model="dt.filter" clearable placeholder="关键字"></el-input>
+                    </template>
                     <template slot-scope="scope">
-                        <el-button type="text" @click="onLookLog(scope.row)"><i class="el-icon-document-copy"></i> 发送日志</el-button>
-                        <el-button type="text" @click="onLookContent(scope.row)"><i class="el-icon-tickets"></i>  发送内容</el-button>
+                        <!-- <el-button type="text" @click="onLookLog(scope.row)"><i class="el-icon-document-copy"></i> 发送日志</el-button> -->
+                        <el-button type="text" @click="onLookContent(scope.row)"><i class="el-icon-tickets"></i>  查看详情</el-button>
                         <!-- <el-button type="text" @click="onDelete(scope.$index, scope.row)"> 删除</el-button> -->
                     </template>
                 </el-table-column>
@@ -51,87 +51,99 @@
             <el-drawer
                 :title="'发送日志 ' + dt.drawer.sendstatus.data.id"
                 :visible.sync="dt.drawer.sendstatus.show"
-                :with-header="false"
                 v-if="dt.drawer.sendstatus.data">
-                <el-container>
-                    <el-main>
-                        <h4>{{new Date(dt.drawer.sendstatus.data.sendtime).toLocaleString()}}</h4>
-                        <el-timeline>
-                            <el-timeline-item
-                                placement="top"
-                                v-for="activity in dt.drawer.sendstatus.data.send"
-                                :key="activity.id"
-                                :timestatmp="dt.drawer.sendstatus.data.sendtime">
-                                <el-card>
-                                    <div v-for="v in Object.entries(activity)" :key="index">
-                                        <p v-if="v[0]==='status'">
-                                            发送状态: <span v-if="v[1]==='fail'" style="background:#ff0000;color:#ffffff;padding:3px;font-size:10px;">发送失败</span>
-                                                        <span v-else style="background:#4caf50;color:#ffffff;padding:3px;font-size:10px;">发送成功</span>
-                                        </p>
-                                        <p v-else-if="v[0]==='id'">
-                                            告警ID：<code>{{v[1]}}</code>
-                                        </p>
-                                        <p v-else-if="v[0]==='msg'">
-                                            发送摘要：<code>{{v[1]}}</code>
-                                        </p>
-                                        <p v-else>
-                                            v[0]：<code>{{v[1]}}</code>
-                                        </p>
-                                    </div>
-                                </el-card>
-                            </el-timeline-item>
-                        </el-timeline>
-                    </el-main>
-                </el-container>
+                <div style="height: calc(100vh - 0px);overflow:auto;padding:20px;">
+                    {{dt.drawer.sendstatus.data}}
+                    <h4>{{new Date(dt.drawer.sendstatus.data.sendtime).toLocaleString()}}</h4>
+                    <el-timeline>
+                        <el-timeline-item
+                            placement="top"
+                            v-for="activity in dt.drawer.sendstatus.data.send"
+                            :key="activity.id"
+                            :timestatmp="dt.drawer.sendstatus.data.sendtime">
+                            <el-card>
+                                <div v-for="v in Object.entries(activity)" :key="index">
+                                    <p v-if="v[0]==='status'">
+                                        发送状态: <span v-if="v[1]==='fail'" style="background:#ff0000;color:#ffffff;padding:3px;font-size:10px;">发送失败</span>
+                                                    <span v-else style="background:#4caf50;color:#ffffff;padding:3px;font-size:10px;">发送成功</span>
+                                    </p>
+                                    <p v-else-if="v[0]==='id'">
+                                        告警ID：<code>{{v[1]}}</code>
+                                    </p>
+                                    <p v-else-if="v[0]==='msg'">
+                                        发送摘要：<code>{{v[1]}}</code>
+                                    </p>
+                                    <p v-else>
+                                        v[0]：<code>{{v[1]}}</code>
+                                    </p>
+                                </div>
+                            </el-card>
+                        </el-timeline-item>
+                    </el-timeline>
+                </div>
             </el-drawer>
             <el-drawer
-                :title="'发送内容 ' + dt.drawer.sendcontent.data.id"
+                title="发送详情"
                 :visible.sync="dt.drawer.sendcontent.show"
-                :with-header="false"
                 v-if="dt.drawer.sendcontent.data">
-                <el-container>
-                    <el-main>
-                        <el-timeline>
-                            <el-timeline-item
-                                placement="top"
-                                v-for="activity in dt.drawer.sendcontent.data"
-                                :key="activity.id"
-                                :timestatmp="activity.ctime">
-                                <div>
-                                    <div v-for="v in Object.entries(activity)" :key="index">
-                                        <div v-if="v[0]==='rule'">
-                                            发送规则：{{v[1]}}
-                                        </div>
-                                        <p v-else-if="v[0]==='id'">
-                                            告警ID：<code>{{v[1]}}</code>
-                                        </p>
-                                        <p v-else-if="v[0]==='to'">
-                                            接收人员：<el-select :value="v[1][0]" clearable placeholder="接收人员">
-                                                        <el-option
-                                                            v-for="item in v[1]"
-                                                            :key="item.name"
-                                                            :label="item.name"
-                                                            :value="item">
-                                                        </el-option>
-                                                        <span style="float: left">{{ item }}</span>
-                                                    </el-select>
-                                        </p>
-                                        <p v-else-if="v[0]==='ctime'">
-                                            发送时间：{{ new Date(v[1]).toLocaleString() }}
-                                        </p>
-                                        <div v-else-if="v[0]==='msg'">
-                                            发送内容：<div v-html="v[1]" style="border:5px solid #dddddd;padding:5px;overflow:auto;border-radius:15px;margin:10px 0px 10px 0px;width:220px;"></div>
-                                        </div>
-                                        <p v-else>
-                                            {{v[0]}}：<code>{{v[1]}}</code>
+                <div style="height: calc(100vh - 90px);overflow:auto;padding:20px;">
+                    <el-timeline>
+                        <el-timeline-item
+                            placement="top"
+                            v-for="(activity,idx) in dt.drawer.sendcontent.data.sendContent"
+                            :key="activity.id"
+                            :timestatmp="activity.ctime">
+                            <el-card>
+                                <div v-for="v in Object.entries(activity)" :key="index">
+                                    <div v-if="v[0]==='rule'">
+                                        发送规则：{{v[1]}}
+                                    </div>
+                                    <div v-else-if="v[0]==='id'">
+                                        告警ID：<code>{{v[1]}}</code>
+                                        <p>发送状态：
+                                            <el-button type="success" v-if="getSendStatus(dt.drawer.sendcontent.data,idx)==='ok'">成功</el-button>
+                                            <el-button type="danger" v-else-if="getSendStatus(dt.drawer.sendcontent.data,idx)==='fail'">失败</el-button>
+                                            <el-button type="primary" v-else>未知</el-button>
                                         </p>
                                     </div>
+                                    <p v-else-if="v[0]==='to'">
+                                        接收人员：<el-select :value="v[1][0]" clearable placeholder="接收人员">
+                                                    <el-option
+                                                        v-for="item in v[1]"
+                                                        :key="item.name"
+                                                        :label="item.name"
+                                                        :value="item">
+                                                    </el-option>
+                                                    <span style="float: left">{{ item }}</span>
+                                                </el-select>
+                                    </p>
+                                    <p v-else-if="v[0]==='ctime'">
+                                        发送时间：{{ new Date(v[1]).toLocaleString() }}
+                                    </p>
+                                    <div v-else-if="v[0]==='msg'">
+                                        发送内容：
+                                        <div class="iphone">
+                                            <div class="iphone-top">
+                                                <span class="camera"></span>
+                                                <span class="sensor"></span>
+                                                <span class="speaker"></span>
+                                            </div>
+                                            <div class="iphone-screen">
+                                                <div v-html="v[1]" style="padding: 10px;overflow-y: auto;"></div>
+                                            </div>
+                                            <div class="iphone-bottom">
+                                                <span></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p v-else>
+                                        {{v[0]}}：<code>{{v[1]}}</code>
+                                    </p>
                                 </div>
-                            </el-timeline-item>
-                        </el-timeline>
-                        
-                    </el-main>
-                </el-container>
+                            </el-card>
+                        </el-timeline-item>
+                    </el-timeline>        
+                </div>
             </el-drawer>
         </el-main>
         <el-footer style="height:40px;line-height:40px;background:#f2f2f2;">
@@ -206,6 +218,10 @@
             }
         },
         methods: {
+            onLayout:_.debounce(()=>{
+                console.log(_.now(),this.$refs)
+                this.$refs.table.doLayout();
+            },1000),
             rowClassName({rowIndex}){
                 return `row-${rowIndex}`;
             },
@@ -231,7 +247,7 @@
                     }));
 
                     this.$nextTick(()=>{
-                    this.$refs.table.doLayout();
+                        this.$refs.table.doLayout();
                     })
                     this.dt.loading = false;
                 }).catch(err=>{
@@ -247,7 +263,7 @@
             },
             onLookContent(row){
                 this.dt.drawer.sendcontent.show = true;
-                this.dt.drawer.sendcontent.data = JSON.parse(this.decodeBase64Content(row.content));
+                this.dt.drawer.sendcontent.data = {sendContent: JSON.parse(this.decodeBase64Content(row.content)), sendStatus:  JSON.parse(this.decodeBase64Content(row.sendstatus)) };
             },
             decodeBase64Content(base64Content) {
                 let commonContent = base64Content.replace(/\s/g, '+');
@@ -256,6 +272,15 @@
             },
             renderContent(content){
                 return Papa.unparse(this.decodeBase64Content(content));
+            },
+            getSendStatus(data,index){
+                console.log(data.sendStatus[index].status)
+                try{
+                    return data.sendStatus[index].status;
+                }catch(err){
+                    console.error(err);
+                    return 'unknown';
+                }
             }
         }
     }
@@ -268,7 +293,103 @@
     height: 40px!important;
     line-height: 40px!important;
   }
-  .el-main{
-    overflow: hidden;
+
+  .el-table /deep/ .el-textarea__inner{
+      border: unset;
+      background-color: transparent;
+  }
+
+  /* 样式1 */
+  .iphone {
+      box-shadow: inset 0 0 3px 0 rgba(0, 0, 0, 0.2), 0 0 0 1px #999, 0 0 30px 0px rgba(0, 0, 0, 0.7);
+      border: 5px solid #d9dbdc;
+      background: #f8f8f8;
+      padding: 15px;
+      border-radius: 50px;
+      height: auto;
+      width: 70%;
+      margin: 0px 10%;
+      position: relative;
+      -webkit-transform: scale(0.8);
+      transform: scale(0.8);
+  }
+  .iphone-top {
+      padding: 5px 110px 40px;
+      position: relative;
+  }
+  .iphone-top .speaker {
+      display: block;
+      width: 70px;
+      height: 6px;
+      margin: 0 auto;
+      border-radius: 6px;
+      background: #292728;
+  }
+  .iphone-top .camera {
+      display: block;
+      margin: 0 auto;
+      height: 10px;
+      width: 10px;
+      border-radius: 50%;
+      margin-bottom: 13px;
+      background: #333;
+  }
+  .iphone-top .sensor {
+      display: block;
+      width: 15px;
+      height: 15px;
+      float: left;
+      background: #333;
+      margin-top: -5px;
+      border-radius: 50%;
+  }
+  .iphone .top-bar, .iphone .bottom-bar {
+      display: block;
+      width: 423px;
+      height: 15px;
+      border-left: 5px solid #BBB;
+      border-right: 5px solid #BBB;
+      position: absolute;
+      left: -5px;
+  }
+  .iphone .top-bar {
+      top: 65px;
+  }
+  
+  .iphone-screen {
+      background: #eee;
+      border: 1px solid #fff;
+      height: 100%;
+      min-height: 40vh;
+      width: 100%;
+      margin: 0 auto;
+      border: 2px solid rgba(0, 0, 0, 0.9);
+      border-radius: 3px;
+      overflow: hidden;
+  }
+  .iphone-bottom {
+      padding: 10px 0 0;
+  }
+  .iphone-bottom span {
+      display: block;
+      margin: 0 auto;
+      width: 68px;
+      height: 68px;
+      background: #ccc;
+      border-radius: 50%;
+      background: -webkit-linear-gradient(315deg, #303233 0%, #b5b7b9 50%, #f0f2f2 69%, #303233 100%);
+      background: linear-gradient(135deg, #303233 0%, #b5b7b9 50%, #f0f2f2 69%, #303233 100%);
+      position: relative;
+  }
+  .iphone-bottom span:after {
+      content: "";
+      display: block;
+      width: 60px;
+      height: 60px;
+      background: #fff;
+      border-radius: 50%;
+      position: absolute;
+      left: 4px;
+      top: 4px;
   }
 </style>

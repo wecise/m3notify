@@ -13,9 +13,6 @@
       <el-tooltip content="导入模板">
         <el-button type="text" icon="el-icon-download"></el-button>
       </el-tooltip-->
-      <div style="position: absolute;right: 20px;top: 10px;">
-        <el-input v-model="dt.search" clearable placeholder="关键字"></el-input>
-      </div>
     </el-header>
     <el-main>
       <el-table
@@ -49,21 +46,18 @@
                 </template>
             </el-table-column>
         </template>
-        <el-table-column label="操作" width="160" fixed="right">
-            <!-- <template slot="header">
-              <el-input
-                v-model="dt.search"
-                clearable
-                placeholder="关键字搜索" />
-            </template> -->
+        <el-table-column label="操作" width="220" fixed="right">
+            <template slot="header" slot-scope="scope">
+                <el-input v-model="dt.search" clearable placeholder="关键字"></el-input>
+            </template>
             <template slot-scope="scope">
               <el-button type="text" @click="onEdit(scope.$index, scope.row)"> 编辑</el-button>
               <el-button type="text" @click="onDelete(scope.$index, scope.row)"> 删除</el-button>
               <el-switch v-model="scope.row['status']" 
                   active-color="#13ce66" 
                   inactive-color="#ff4949"
-                  :active-value="1"
-                  :inactive-value="0"
+                  active-value="1"
+                  inactive-value="0"
                   style="padding-left:10px;"
                   @change="onToggleStatus(scope.row)"></el-switch>
             </template>
@@ -71,7 +65,7 @@
       </el-table>
       <el-dialog
         title="新建模版"
-        width="80%"
+        class="template-dialog"
         :visible.sync="dialog.template.new.show"
         :append-to-body="true"
         :show-close="false"
@@ -80,64 +74,81 @@
         :destroy-on-close="true"
         @close="onReset('newTemplateForm')"
         v-if="dialog.template.new.show">
-        
-          <el-form :model="dialog.template.new.data" :rules="dialog.template.new.rules" ref="newTemplateForm" label-width="100px">
-            
-            <el-form-item label="名称" prop="name">
-              <el-input v-model="dialog.template.new.data.name"></el-input>
-            </el-form-item>
+          <div style="display:flex;flex-wrap:nowrap;">
+            <el-form :model="dialog.template.new.data" :rules="dialog.template.new.rules" 
+              ref="newTemplateForm" label-width="100px"
+              style="width:65%;">
+              
+              <el-form-item label="名称" prop="name">
+                <el-input v-model="dialog.template.new.data.name"></el-input>
+              </el-form-item>
 
-            <el-form-item label="数据源">
-                <el-input v-model="dialog.template.datasource.class" disabled style="width:50%">
-                    <el-dropdown slot="prepend">
-                        <span class="el-dropdown-link">
-                            <i class="el-icon-coin el-icon--right" style="cursor:pointer;"></i>
-                        </span>
-                        <el-dropdown-menu slot="dropdown">
-                            <DatasourceView :root="dialog.template.datasource.root" 
-                                @node-click="onDataSourceSelect($event,'new')"></DatasourceView>
-                        </el-dropdown-menu>
-                    </el-dropdown>
-                </el-input>
-                <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择数据源</span>
-            </el-form-item>
+              <el-form-item label="数据源">
+                  <el-input v-model="dialog.template.datasource.class" disabled >
+                      <el-dropdown slot="prepend">
+                          <span class="el-dropdown-link">
+                              <i class="el-icon-coin el-icon--right" style="cursor:pointer;"></i>
+                          </span>
+                          <el-dropdown-menu slot="dropdown">
+                              <DatasourceView :root="dialog.template.datasource.root" 
+                                  @node-click="onDataSourceSelect($event,'new')"></DatasourceView>
+                          </el-dropdown-menu>
+                      </el-dropdown>
+                  </el-input>
+                  <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择数据源</span>
+              </el-form-item>
 
-            <el-form-item label="属性" v-if="dialog.template.datasource.data">
-                <DataFieldsView :fields="dialog.template.datasource.data.fields" 
-                    @fields-change="onDataFieldsSelect($event,'new')"
-                    @node-click="onDataFieldsSelect($event,'new')"
-                    style="width:50%"></DataFieldsView>
-                    <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成通知模版</span>
-            </el-form-item>
-            
-            <el-form-item label="模版定义" prop="content">
-              <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 通知模版由所选属性生成，也可自行调整添加常量属性，支持HTML格式化。</span>
-              <div style="display:flex;flex-wrap:nowrap;">
-                <VueEditor
-                    v-model="dialog.template.new.data.content"
-                    @init="onEditorInit"
-                    :lang="editor.lang.value"
-                    :theme="editor.theme.value"
-                    width="65%"
-                    height="calc(100vh - 380px)"
-                    style="box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);border: 3px solid #dddddd;border-radius: 15px;"
-                    ref="editorRef"
-                ></VueEditor>
-                <div style="width:35%;">
-                    <div v-html="newTemplatePriview" style="font-size:12px;height: calc(100vh - 430px);background:#fff;margin:0px 30px;padding:25px 20px; box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);border: 3px solid #dddddd;border-radius: 15px;overflow-y: auto;"></div>
+              <el-form-item label="属性" v-if="dialog.template.datasource.data">
+                  <DataFieldsView :fields="dialog.template.datasource.data.fields" 
+                      @fields-change="onDataFieldsSelect($event,'new')"
+                      @node-click="onDataFieldsSelect($event,'new')"
+                      style="width:50%"></DataFieldsView>
+                      <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成通知模版</span>
+              </el-form-item>
+              
+              <el-form-item label="模版定义" prop="content">
+                <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 通知模版由所选属性生成，也可自行调整添加常量属性，支持HTML格式化。</span>
+                  <VueEditor
+                      v-model="dialog.template.new.data.content"
+                      @init="onEditorInit"
+                      :lang="editor.lang.value"
+                      :theme="editor.theme.value"
+                      width="100%"
+                      height="calc(100vh - 380px)"
+                      style="box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);border: 3px solid #dddddd;border-radius: 15px;"
+                      ref="editorRef"
+                  ></VueEditor>
+              </el-form-item>
+              <el-form-item label="状态" prop="status">
+                <el-switch
+                  v-model="dialog.template.new.data.attr.status"
+                  active-color="#13ce66"
+                  inactive-color="#dddddd"
+                  active-value="1"
+                  inactive-value="0">>
+                </el-switch>
+              </el-form-item>
+            </el-form>
+            <div style="width:35%;margin-top:-70px;">
+                
+                <!-- <div v-for="(v,k) in getTemplate(dialog.template.new.data.content)" :key="k" v-if="newTemplatePriview">
+                    {{k}}{{v}}
+                </div> -->
+                <div class="iphone">
+                  <div class="iphone-top">
+                    <span class="camera"></span>
+                    <span class="sensor"></span>
+                    <span class="speaker"></span>
+                  </div>
+                  <div class="iphone-screen">
+                    <div v-html="newTemplatePriview" style="padding: 10px;overflow-y: auto;"></div>
+                  </div>
+                  <div class="iphone-bottom">
+                    <span></span>
+                  </div>
                 </div>
-              </div>
-            </el-form-item>
-            <el-form-item label="状态" prop="status">
-              <el-switch
-                v-model="dialog.template.new.data.attr.status"
-                active-color="#13ce66"
-                inactive-color="#dddddd"
-                :active-value="1"
-                :inactive-value="0">>
-              </el-switch>
-            </el-form-item>
-          </el-form>
+            </div>
+          </div>
           
         <span slot="footer" class="dialog-footer">
           <el-button @click="dialog.template.new.show = false">取 消</el-button>
@@ -147,7 +158,7 @@
       </el-dialog>
       <el-dialog
         title="模版管理"
-        width="80%"
+        class="template-dialog"
         :visible.sync="dialog.template.edit.show"
         :append-to-body="true"
         :show-close="false"
@@ -155,8 +166,10 @@
         :close-on-click-modal="false"
         :destroy-on-close="true"
         v-if="dialog.template.edit.show">
-        
-          <el-form :model="dialog.template.edit.data"  :rules="dialog.template.edit.rules" ref="editTemplateForm" label-width="100px">
+        <div style="display:flex;flex-wrap:nowrap;">
+          <el-form :model="dialog.template.edit.data" :rules="dialog.template.edit.rules" 
+            ref="editTemplateForm" label-width="100px"
+            style="width:70%;">
             
             <el-form-item label="名称" prop="name">
               <el-input v-model="dialog.template.edit.data.name" disabled></el-input>
@@ -187,33 +200,46 @@
             
             <el-form-item label="模版定义" prop="content">
               <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 通知模版由所选属性生成，也可自行调整添加常量属性，支持HTML格式化。</span>
-              <div style="display:flex;flex-wrap:nowrap;">
-                <VueEditor
-                    v-model="dialog.template.edit.data.content"
-                    @init="onEditorInit"
-                    :lang="editor.lang.value"
-                    :theme="editor.theme.value"
-                    width="65%"
-                    height="calc(100vh - 380px)"
-                    style="box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);border: 3px solid #dddddd;border-radius: 15px;"
-                    ref="editorRef"
-                ></VueEditor>
-                <div style="width:35%;">
-                    <div v-html="editTemplatePriview" style="font-size:12px;height: calc(100vh - 430px);background:#fff;margin:0px 30px;padding:25px 20px; box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);border: 3px solid #dddddd;border-radius: 15px;overflow-y: auto;"></div>
-                </div>
-              </div>
+              <VueEditor
+                  v-model="dialog.template.edit.data.content"
+                  @init="onEditorInit"
+                  :lang="editor.lang.value"
+                  :theme="editor.theme.value"
+                  width="100%"
+                  height="calc(100vh - 380px)"
+                  style="box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);border: 3px solid #dddddd;border-radius: 15px;"
+                  ref="editorRef"
+              ></VueEditor>
             </el-form-item>
             <el-form-item label="状态" prop="status">
               <el-switch
                 v-model="dialog.template.edit.data.attr.status"
                 active-color="#13ce66"
                 inactive-color="#dddddd"
-                :active-value="1"
-                :inactive-value="0">>
+                active-value="1"
+                inactive-value="0">>
               </el-switch>
             </el-form-item>
           </el-form>
-          
+
+          <div style="width:30%;margin-top:-70px;">
+                
+                <div class="iphone">
+                  <div class="iphone-top">
+                    <span class="camera"></span>
+                    <span class="sensor"></span>
+                    <span class="speaker"></span>
+                  </div>
+                  <div class="iphone-screen">
+                    <div v-html="editTemplatePriview" style="padding: 10px;overflow-y: auto;"></div>
+                  </div>
+                  <div class="iphone-bottom">
+                    <span></span>
+                  </div>
+                </div>
+          </div>
+
+        </div>
         <span slot="footer" class="dialog-footer">
           <el-button @click="dialog.template.edit.show = false">取 消</el-button>
           <el-button type="primary" @click="onUpdate" :loading="dialog.template.edit.loading">确 定</el-button>
@@ -231,6 +257,7 @@ import _ from 'lodash';
 import TagView from '../tags/TagView';
 import DatasourceView from './DatasourceView';
 import DataFieldsView from './DataFieldsView';
+import ApiPerm from '../system/apiPerm.vue';
 
 export default {
   name: "TemplateView",
@@ -241,7 +268,8 @@ export default {
     TagView,
     VueEditor: require("vue2-ace-editor"),
     DatasourceView,
-    DataFieldsView
+    DataFieldsView,
+    ApiPerm
   },
   data() {
     return {
@@ -303,7 +331,7 @@ export default {
               list: []
           },
           theme: {
-              value: "merbivore",
+              value: "chrome",
               list: this.m3.theme.EDITOR_THEME
           }
       }
@@ -364,6 +392,10 @@ export default {
      this.initData();
   },
   methods: {
+    getTemplate(data){
+      console.log(data)
+      return JSON.parse(data).template;
+    },
     initEditor(){
         let editor = this.$refs.editorRef.editor;
         
@@ -419,9 +451,9 @@ export default {
           
         }));
 
-        this.$nextTick(()=>{
+        setTimeout(()=>{
           this.$refs.table.doLayout();
-        })
+        },500)
       });
     },
     onRefresh(){
@@ -546,5 +578,103 @@ export default {
   
   .el-main{
     overflow: hidden;
+  }
+
+  .template-dialog /deep/ .el-dialog{
+    width: 80vw!important;
+    height: auto;
+  }
+
+  /* 样式1 */
+  .iphone {
+      box-shadow: inset 0 0 3px 0 rgba(0, 0, 0, 0.2), 0 0 0 1px #999, 0 0 30px 0px rgba(0, 0, 0, 0.7);
+      border: 5px solid #d9dbdc;
+      background: #f8f8f8;
+      padding: 15px;
+      border-radius: 50px;
+      height: auto;
+      width: 100%;
+      position: relative;
+      -webkit-transform: scale(0.8);
+      transform: scale(0.8);
+  }
+  .iphone-top {
+      padding: 5px 110px 40px;
+      position: relative;
+  }
+  .iphone-top .speaker {
+      display: block;
+      width: 70px;
+      height: 6px;
+      margin: 0 auto;
+      border-radius: 6px;
+      background: #292728;
+  }
+  .iphone-top .camera {
+      display: block;
+      margin: 0 auto;
+      height: 10px;
+      width: 10px;
+      border-radius: 50%;
+      margin-bottom: 13px;
+      background: #333;
+  }
+  .iphone-top .sensor {
+      display: block;
+      width: 15px;
+      height: 15px;
+      float: left;
+      background: #333;
+      margin-top: -5px;
+      border-radius: 50%;
+  }
+  .iphone .top-bar, .iphone .bottom-bar {
+      display: block;
+      width: 423px;
+      height: 15px;
+      border-left: 5px solid #BBB;
+      border-right: 5px solid #BBB;
+      position: absolute;
+      left: -5px;
+  }
+  .iphone .top-bar {
+      top: 65px;
+  }
+  
+  .iphone-screen {
+      background: #eee;
+      border: 1px solid #fff;
+      height: 100%;
+      min-height: 70vh;
+      width: 100%;
+      margin: 0 auto;
+      border: 2px solid rgba(0, 0, 0, 0.9);
+      border-radius: 3px;
+      overflow: hidden;
+  }
+  .iphone-bottom {
+      padding: 10px 0 0;
+  }
+  .iphone-bottom span {
+      display: block;
+      margin: 0 auto;
+      width: 68px;
+      height: 68px;
+      background: #ccc;
+      border-radius: 50%;
+      background: -webkit-linear-gradient(315deg, #303233 0%, #b5b7b9 50%, #f0f2f2 69%, #303233 100%);
+      background: linear-gradient(135deg, #303233 0%, #b5b7b9 50%, #f0f2f2 69%, #303233 100%);
+      position: relative;
+  }
+  .iphone-bottom span:after {
+      content: "";
+      display: block;
+      width: 60px;
+      height: 60px;
+      background: #fff;
+      border-radius: 50%;
+      position: absolute;
+      left: 4px;
+      top: 4px;
   }
 </style>

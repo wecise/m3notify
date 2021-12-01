@@ -251,7 +251,7 @@ export default {
     
       let param = {
                       parent: this.root, name: "server.json", 
-                      data: { content: content, type: 'json', attr: '', index: true }    
+                      data: { content: content, type: 'json', attr: {}, index: true }    
                   };
       
       this.loading = true;

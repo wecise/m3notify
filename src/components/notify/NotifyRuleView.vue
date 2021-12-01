@@ -13,9 +13,6 @@
       <el-tooltip content="导入策略">
         <el-button type="text" icon="el-icon-download"></el-button>
       </el-tooltip-->
-      <div style="position: absolute;right: 20px;top: 10px;">
-        <el-input v-model="dt.search" clearable placeholder="关键字"></el-input>
-      </div>
     </el-header>
     <el-main>
       <el-table
@@ -64,7 +61,9 @@
             </el-table-column>
         </template>
         <el-table-column label="操作" width="160" fixed="right">
-          
+          <template slot="header" slot-scope="scope">
+              <el-input v-model="dt.search" clearable placeholder="关键字"></el-input>
+          </template>
           <template slot-scope="scope">
             <el-button type="text"  @click="onEdit(scope.row)"> 编辑</el-button>
             <el-button type="text"  @click="onDelete(scope.row)" :loading="loading"> 删除</el-button>
@@ -86,9 +85,10 @@
         :close-on-press-escape="false"
         :append-to-body="true"
         class="notifyRule-dialog"
+        @open="onOpen"
         v-if="dialog.rule.new.show">
         <el-form :model="dialog.rule.new.data"  :rules="dialog.rule.new.rules" ref="notifyRuleForm" label-width="100px">
-          <el-form-item label="名称" prop="name">
+          <el-form-item label="策略名称" prop="name">
            <el-input v-model="dialog.rule.new.data.name"></el-input>
           </el-form-item>
           <el-form-item label="接收人员" prop="persons">
@@ -110,7 +110,7 @@
               </template>
               </el-cascader>
           </el-form-item>
-          <el-form-item label="类型" prop="rtype">
+          <el-form-item label="通知类型" prop="rtype">
             <el-select v-model="dialog.rule.new.data.rtype" multiple placeholder="请选择" style="width:100%;">
               <el-option
                 v-for="item in rtype.list"
@@ -122,7 +122,7 @@
               </el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="场景" prop="situation">
+          <el-form-item label="通知规则" prop="situation">
             <el-select v-model="dialog.rule.new.data.situation" placeholder="请选择">
               <el-option
                 v-for="item in situation.list"
@@ -136,12 +136,12 @@
               </el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="模版" prop="template">
-            <el-select v-model="dialog.rule.new.data.template" placeholder="请选择">
+          <el-form-item label="通知模版" prop="template">
+            <el-select v-model="dialog.rule.new.data.template" value-key="fullname" placeholder="请选择">
               <el-option
                 v-for="item in templates.list"
-                :key="item.name"
-                :label="item.name"
+                :key="item.fullname"
+                :label="item.title"
                 :value="item">
                 <span style="float: left">{{ item.name | formatName }}</span>
               </el-option>
@@ -170,6 +170,7 @@
         :visible.sync="dialog.rule.edit.show"
         :append-to-body="true"
         class="notifyRule-dialog"
+        @open="onOpen"
         v-if="dialog.rule.edit.show">
         <el-form :model="dialog.rule.edit.data"  :rules="dialog.rule.edit.rules" ref="notifyRuleForm" label-width="100px">
           <el-form-item label="名称" prop="name">
@@ -206,29 +207,37 @@
             </el-select>
           </el-form-item>
           <el-form-item label="通知规则" prop="situation">
-            <el-select v-model="dialog.rule.edit.data.situation" placeholder="请选择">
-              <el-option
-                v-for="item in situation.list"
-                :key="item.id"
-                :label="item.name"
-                :value="item.id">
-                <span style="float: left">{{ item.name }}</span>
-                <span style="float: right; color: #8492a6; font-size: 8px">
-                  <span class="el-icon-tickets" style="color:#999;font-size:8px;padding-left: 5px;" v-if="item.situation"> {{ item.situation }}</span>
-                </span>
-              </el-option>
-            </el-select>
+            <el-input placeholder="选择通知规则" :value="situation.list,dialog.rule.edit.data.situation | getSituationName">
+                  <template slot="prepend">
+                    <i class="el-icon-tickets"></i>
+                    <el-select v-model="dialog.rule.edit.data.situation" value-key="id" placeholder="请选择" style="width:47px;">
+                      <el-option
+                        v-for="item in situation.list"
+                        :key="item.id"
+                        :value="item.id">
+                        <span style="float: left">{{ item.name }}</span>
+                        <span style="float: right; color: #8492a6; font-size: 8px">
+                          <span class="el-icon-tickets" style="color:#999;font-size:8px;padding-left: 5px;" v-if="item.situation"> {{ item.situation }}</span>
+                        </span>
+                      </el-option>
+                    </el-select>
+                  </template>
+            </el-input>
           </el-form-item>
           <el-form-item label="通知模版" prop="template">
-            <el-select v-model="dialog.rule.edit.data.template" placeholder="请选择">
-              <el-option
-                v-for="item in templates.list"
-                :key="item.name"
-                :label="item.title"
-                :value="item">
-                <span style="float: left">{{ item.title }}</span>
-              </el-option>
-            </el-select>
+            <el-input placeholder="选择通知模版" :value="dialog.rule.edit.data.template.title" v-if="dialog.rule.edit.data.template">
+                  <template slot="prepend">
+                    <i class="el-icon-notebook-2"></i>
+                    <el-select v-model="dialog.rule.edit.data.template" value-key="fullname" placeholder="请选择" style="width:47px;">
+                      <el-option
+                        v-for="item in templates.list"
+                        :key="item.fullname"
+                        :value="item">
+                        <span style="float: left">{{ item.title }}</span>
+                      </el-option>
+                    </el-select>
+                  </template>
+              </el-input>
           </el-form-item>
         
           <el-form-item label="状态" prop="status">
@@ -352,6 +361,9 @@ export default {
     },
     formatTime(val){
       return window.moment(val).format(window.global.register.format);
+    },
+    getSituationName(situations,val){
+      return _.find(situations,{id:val}).name;
     }
   },
   components:{
@@ -422,9 +434,9 @@ export default {
           
         }));
 
-        this.$nextTick(()=>{
+        setTimeout(()=>{
           this.$refs.table.doLayout();
-        })
+        },500)
       })
     },
     // 递归判断列表，把最后的children设为undefined
@@ -462,6 +474,9 @@ export default {
     rowClassName({rowIndex}){
         return `notifyRule-row-${rowIndex}`;
     },
+    onOpen(){
+      this.init();
+    },
     onRefresh(){
       this.initData();
     },
@@ -477,6 +492,7 @@ export default {
     },
     onNew(){
       this.dialog.rule.new.show = true;
+      _.extend(this.dialog.rule.new.data,{template:{title:""}});
       this.onReset('new');
     },
     onSave(){
@@ -562,8 +578,8 @@ export default {
       })
     },
     onEdit(item){
-      this.dialog.rule.edit.data = item;
-      this.dialog.rule.edit.data.template = _.find(this.templates.list, {fullname: _.values(item.template)[0]});
+      this.dialog.rule.edit.data = _.cloneDeep(item);
+      _.extend(this.dialog.rule.edit.data, {template:_.find(this.templates.list, {fullname: _.values(item.template)[0]})});
       this.dialog.rule.edit.show = true;
     },
     onUpdate(){
@@ -592,8 +608,6 @@ export default {
           this.$message.warning("请选择通知内容模版");
           return false;
         }
-
-        console.log(11212,this.dialog.rule.edit.data.template)
 
         this.dialog.rule.edit.loading = true;
 

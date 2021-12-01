@@ -4,22 +4,6 @@
         <Split :gutterSize="5">
             <SplitArea :size="20" :minSize="0" style="overflow:hidden;background:#f2f2f2;">
                 <TagTreeView :model="{domain:'notifySituation'}" :fun="onRefreshByTag" ref="notifySituationTagTree"></TagTreeView>
-                <!--el-tree 
-                    node-key="id"
-                    :data="tree.data" 
-                    :props="tree.defaultProps" 
-                    highlight-current
-                    default-expand-all
-                    style="background: #f2f2f2;height: 100%;"
-                    ref="tree">
-                    <span slot-scope="{ node, data }" style="width:100%;height:30px;line-height: 30px;"  @mouseenter="onMouseEnter(data)" @mouseleave="onMouseLeave(data)">
-                      <span v-if="data.id==-1"><svg-icon icon-class="home"/> {{node.label}}</span>
-                      <span v-else><svg-icon icon-class="documentation" style="color:#03a9f4;"/> {{node.label}}</span>
-                      <el-button v-show="data.show" type="text" @click="onDelete($event,data)" style="float:right;width:14px;margin:0 5px;" icon="el-icon-delete" v-if="data.id!=-1"></el-button>
-                      <el-button v-show="data.show" type="text" @click="onNew($event,data)" style="float:right;width:14px;margin:0 5px;" icon="el-icon-plus"></el-button>
-                      <el-button v-show="data.show" type="text" @click="onRefresh($event,data)" style="float:right;width:14px;margin:0 5px;" icon="el-icon-refresh"></el-button>
-                    </span>   
-                  </el-tree-->
                   <el-dialog
                     title="分类管理"
                     :visible.sync="dialog.classified.show"
@@ -124,9 +108,6 @@
                     <el-tooltip content="导出">
                       <el-button type="text" icon="el-icon-download"></el-button>
                     </el-tooltip>
-                    <div style="position: absolute;right:20px;top: 10px;">
-                      <el-input v-model="dt.search" clearable placeholder="关键字"></el-input>
-                    </div>
                   </el-header>
                   <el-main>
                     <el-table
@@ -161,6 +142,9 @@
                           </el-table-column>
                       </template>
                       <el-table-column label="操作"  width="180" fixed="right">
+                        <template slot="header" slot-scope="scope">
+                            <el-input v-model="dt.search" clearable placeholder="关键字"></el-input>
+                        </template>
                         <template slot-scope="scope">
                           <el-button type="text" @click="onEdit(scope.$index, scope.row)"> 编辑</el-button>
                           <el-button type="text" @click="onDelete(scope.$index, scope.row)"> 删除</el-button>
@@ -314,13 +298,12 @@ export default {
             return _.extend(v, { render: eval(v.render) });
           }
           
-        
 
         });
 
-        this.$nextTick(()=>{
+        setTimeout(()=>{
           this.$refs.table.doLayout();
-        })
+        },500)
 
         let children = res.message.rows;
         this.tree.data = [{ id:"-1",parent:'/我的分类',name:'我的分类',children: children}];
@@ -379,6 +362,7 @@ export default {
       this.onRefresh();
     },
     onSave(){
+      this.dialog.classified.data.situation = this.dialog.classified.data.situation.replace(/\'/g,"''");
       let param = encodeURIComponent( JSON.stringify({action: this.dialog.classified.action, model:this.dialog.classified.data}) );
       this.m3.callFS("/matrix/m3event/notify/situationAction.js",param).then(()=>{
         this.$message({
@@ -395,6 +379,7 @@ export default {
       }) 
     },
     onToggleStatus(row){
+      row.situation = row.situation.replace(/\'/g,"''");
       this.dialog.classified.action = "update";
       let param = encodeURIComponent(JSON.stringify({
                     action: this.dialog.classified.action,
