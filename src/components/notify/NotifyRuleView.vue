@@ -154,8 +154,7 @@
                 active-color="#13ce66"
                 inactive-color="#dddddd"
                 :active-value="1"
-                :inactive-value="0"
-                @change="onToggleStatus(dialog.rule.new.data)">
+                :inactive-value="0">
               </el-switch>
           </el-form-item>
         </el-form>
@@ -228,10 +227,10 @@
             <el-input placeholder="选择通知模版" :value="dialog.rule.edit.data.template.title" v-if="dialog.rule.edit.data.template">
                   <template slot="prepend">
                     <i class="el-icon-notebook-2"></i>
-                    <el-select v-model="dialog.rule.edit.data.template" value-key="fullname" placeholder="请选择" style="width:47px;">
+                    <el-select v-model="dialog.rule.edit.data.template" value-key="name" placeholder="请选择" style="width:47px;">
                       <el-option
                         v-for="item in templates.list"
-                        :key="item.fullname"
+                        :key="item.name"
                         :value="item">
                         <span style="float: left">{{ item.title }}</span>
                       </el-option>
@@ -246,8 +245,7 @@
                 active-color="#13ce66"
                 inactive-color="#dddddd"
                 :active-value="1"
-                :inactive-value="0"
-                @change="onToggleStatus(dialog.rule.edit.data)">
+                :inactive-value="0">
               </el-switch>
           </el-form-item>
         </el-form>
@@ -436,7 +434,7 @@ export default {
 
         setTimeout(()=>{
           this.$refs.table.doLayout();
-        },500)
+        },1500)
       })
     },
     // 递归判断列表，把最后的children设为undefined
@@ -463,7 +461,9 @@ export default {
       })
 
       this.m3.callFS("/matrix/m3event/notify/getTemplateList.js").then(rtn=>{
-        this.templates.list = rtn.message.rows;
+        this.templates.list = _.map(rtn.message.rows,v=>{
+          return {name:v.name, value: {[v.name]:v.fullname}, title: v.name.replace(/.json/,'')};
+        });
       })
 
       let param = encodeURIComponent( JSON.stringify({action:'list'}) );
@@ -579,7 +579,7 @@ export default {
     },
     onEdit(item){
       this.dialog.rule.edit.data = _.cloneDeep(item);
-      _.extend(this.dialog.rule.edit.data, {template:_.find(this.templates.list, {fullname: _.values(item.template)[0]})});
+      _.extend(this.dialog.rule.edit.data, {template: _.find(this.templates.list, {name: _.keys(item.template)[0]})});
       this.dialog.rule.edit.show = true;
     },
     onUpdate(){
@@ -629,6 +629,7 @@ export default {
         });
     },
     onToggleStatus(row){
+      
       let param = encodeURIComponent(JSON.stringify({
                     action: 'update',
                     model: row

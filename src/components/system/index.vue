@@ -4,7 +4,7 @@
             <ldapMange root="/" @update:selectedNode="onLoadUser($event)" ref="ldapManage"></ldapMange>
         </SplitArea>
         <SplitArea :size="80" :minSize="0" style="overflow:hidden;">
-            <user-list :model="model" ref="userList"></user-list>
+            <user-list :model="model" ref="userList" @refresh-ldap="onRefreshLdap"></user-list>
         </SplitArea>
     </Split>
 </template>
@@ -80,6 +80,9 @@
                     }
                 })
 
+            },
+            onRefreshLdap(){
+                this.$refs.ldapManage.onRefresh();
             }
         }
     }

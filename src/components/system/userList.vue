@@ -108,7 +108,10 @@
                     </template>
                 </el-table-column>
             </el-table>
-            <el-dialog :title="'用户编辑 ' + dialog.user.row.username" :visible.sync="dialog.user.show" 
+            <!-- 用户编辑 -->
+            <el-dialog 
+                width="50%!important"
+                :title="'用户编辑 ' + dialog.user.row.username" :visible.sync="dialog.user.show" 
                 :close-on-press-escape="false"
                 :close-on-click-modal="false"
                 v-if="dialog.user.show">
@@ -124,7 +127,11 @@
                                         </span>
                                         <el-dropdown-menu slot="dropdown">
                                             <el-dropdown-item>
-                                                <ldap-manage-move root="/" @update:selectedLdapToMove="(($event)=>{ onUserGroupMoved(dialog.user.row,$event); })" ref="ldapManageMove"></ldap-manage-move>
+                                                <ldapMove 
+                                                    root="/" 
+                                                    :rowData="dialog.user.row"
+                                                    @update:selectedLdapToMove="(($event)=>{ onUserGroupMoved(dialog.user.row,$event); })" 
+                                                    ref="ldapManageMove"></ldapMove>
                                             </el-dropdown-item>
                                         </el-dropdown-menu>
                                     </el-dropdown>
@@ -238,6 +245,9 @@
                     }
                 }
             }
+        },
+        components:{
+            ldapMove: () => import("./ldapMove.vue")
         },
         filters:{
             pickDatetime(item){
@@ -393,29 +403,29 @@
                     type: 'warning'
                 }).then(() => {
                         
-                    userHandler.userGruopUpdateAsync(user, newGroup).then( (rtn)=>{
-                        if(rtn.status == 1){
+                    this.m3.user.updateUserGroup(user, newGroup).then( res=>{
+                        if(res.status === 'ok'){
                             this.$message({
                                 type: "success",
                                 message: "更新组成功"
                             })
 
-                            this.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$refs.ldapManage.onRefresh();
-                            this.dialog.user.row.id = rtn.id;
+                            this.$emit("refresh-ldap");
+                            this.dialog.user.row.id = res.message; // 返回新的用户id
                             this.dialog.user.row.parent = newGroup.fullname;
                             
                         } else{
                             this.$message({
                                 type: "error",
-                                message: "更新组失败 " + rtn
+                                message: "更新组失败 " + res.message
                             })
                         }
                     } )
                     
-                }).catch(err => {
+                }).catch( () => {
                     this.$message({
                         type: "info",
-                        message: "更新组操作已取消 " + err
+                        message: "更新组操作已取消"
                     })
                 });
                 

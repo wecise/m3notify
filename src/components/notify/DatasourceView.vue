@@ -8,7 +8,7 @@
         <el-main style="padding:0px 10px; height: 100%;">
             <el-tree :data="treeData" 
                     :props="defaultProps" 
-                    node-key="id"
+                    node-key="class"
                     highlight-current
                     default-expand-all
                     auto-expand-parent
@@ -83,11 +83,6 @@ export default {
         },1000),
         onNodeClick(data){
             this.$emit('node-click',data);
-            /* let param = encodeURIComponent(data.class);
-            this.m3.callFS("/matrix/entity/entity_class_fields.js", param).then(res=>{
-                _.extend(data, {fields: res.message});
-                this.$emit('node-click',data);
-            }) */
         }
     }
 }

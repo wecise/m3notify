@@ -1,4 +1,3 @@
-/* ldap组织、人员管理 */
 <template>
     <el-container>
         <el-header style="height:40px;line-height:40px;text-align:right;display:flex;">
@@ -11,10 +10,10 @@
             
            <span style="float:right;width:100px;">
                 <el-tooltip content="新建组织">
-                    <el-button type="text" icon="el-icon-office-building" @click="onNewGroup(selectedNode)"></el-button>
+                    <el-button type="text" icon="el-icon-office-building" @click="onNewGroup({'fullname':'/'})"></el-button>
                 </el-tooltip>
                 <el-tooltip content="新建用户">
-                    <el-button type="text" icon="el-icon-user" @click="onNewUser(selectedNode)"></el-button>
+                    <el-button type="text" icon="el-icon-user" @click="onNewUser({'fullname':'/'})"></el-button>
                 </el-tooltip>
             </span>
         </el-header>
@@ -47,7 +46,9 @@
                     </span>
                 </span>                  
             </el-tree>
-            <el-dialog title="新建组织" :visible.sync="dialog.group.show" v-if="dialog.group.show" 
+            <el-dialog title="新建组织" 
+                width="50%!important"
+                :visible.sync="dialog.group.show" v-if="dialog.group.show" 
                 :close-on-press-escape="false"
                 :close-on-click-modal="false">
                 <el-container>
@@ -70,7 +71,9 @@
                     <el-button type="primary" icon="el-icon-" @click="onSaveGroup">创建组</el-button>
                 </div>
             </el-dialog>
-            <el-dialog title="新建用户" :visible.sync="dialog.user.show" v-if="dialog.user.show" 
+            <el-dialog title="新建用户" 
+                width="50%!important"
+                :visible.sync="dialog.user.show" v-if="dialog.user.show" 
                 :close-on-press-escape="false"
                 :close-on-click-modal="false">
                 <el-container>
@@ -373,9 +376,14 @@ export default {
                 } else {
                     this.$message({
                         type: 'error',
-                        message: '添加失败 ' + rtn.message
+                        message: `组: ${this.dialog.group.parent}  添加失败 ` + rtn.message
                     });
                 }
+            }).catch(err=>{
+                this.$message({
+                    type: "error",
+                    message: `组: ${this.dialog.group.parent} 添加失败 ` + err
+                })
             });
         },
         onSaveUser(){
@@ -474,7 +482,14 @@ export default {
                     
                     this.dialog.user.loading = false;
                 }
-            })  
+            }).catch(err=>{
+                this.$message({
+                    type: "error",
+                    message: `${this.dialog.user.ldap.username} ${this.dialog.user.email} 添加失败 ` + err
+                })
+                
+                this.dialog.user.loading = false;
+            })
 
         },
         onPasswordVaild(evt){

@@ -1,9 +1,10 @@
 <template>
-    <el-container style="height:100%;background:#f2f2f2;">
-        <el-main style="">
+    <el-container>
+        <el-main>
             <el-tree 
                 node-key="fullname"
                 highlight-current
+                default-expand-all="true"
                 :data="nodes" 
                 :props="defaultProps" 
                 :filter-node-method="onFilterNode"
@@ -12,9 +13,9 @@
                 style="background: transparent;"
                 ref="tree">
                 <span slot-scope="{ node, data }" style="width:100%;height:30px;line-height: 30px;">
-                    <span v-if="data.otype=='org'">
+                    <span v-if="data.otype==='org'">
                         <span class="el-icon-school" style="color:#FF9800;"></span>
-                        <span v-if="data.username === '/'">{{window.COMPANY_FULLNAME}}</span><span v-else>{{node.label}}</span>
+                        <span v-if="data.username === '/'">{{m3.auth.Company.fullname}}</span><span v-else>{{node.label}}</span>
                     </span>
                     <span v-else>
                         <span class="el-icon-user" style="color:#67c23a;"></span>
@@ -44,9 +45,11 @@ export default {
     },
     watch: {
         nodes:{
-            handler(val,oldVal){
+            handler(){
                 // 只显示组织
-                this.$refs.tree.filter('org');
+                if(this.$refs.tree){
+                    this.$refs.tree.filter('org');	
+                }
             },
             deep:true
         }
@@ -54,13 +57,17 @@ export default {
     created(){
         this.initNodes();
     },
+    mounted(){
+        this.$nextTick(()=>{
+            this.$refs.tree.filter("undefined");
+        })
+    },
     methods:{
         initNodes() {
-            const self = this;
-
+            
             try{
 
-                const traverse = (obj) => {
+                /* const traverse = (obj) => {
                     
                     _.forEach(obj,(v)=>{
                         
@@ -99,27 +106,44 @@ export default {
                 }
 
                 // 只显示组织
-                this.nodes = _.sortBy([userHandler.userList("/").message],'fullname');
+                this.m3.user.list().then(res=>{
+                    console.log(res.message)
+                    this.nodes = _.sortBy([res.message],'fullname');
+                    traverse(this.nodes);
+                }) */
 
-                traverse(this.nodes);
+
+                try{
+                    this.m3.user.listByFullname("/").then( (rtn)=>{
+                        this.nodes = [rtn.message];
+                    } );
+                } catch(err){
+                    console.error(err)
+                } 
+                
 
             } catch(err){
-
+                console.error(err)
             } finally{
                 
-                // 设置已选择项 需要勾选子节点  111111
+                // 设置已选择项 需要勾选子节点
                 if( this.rowData ){
                     _.forEach(this.rowData.member,(v)=>{
-                        self.selectedNodes.push(v.replace(/^['G','U','O']/g,''));
+                        this.selectedNodes.push(v.replace(/^['G','U','O']/g,''));
                     })
                 }
             }
 
         },
         onFilterNode(value, data){
+            console.log(1111,value,data)
             return data.otype.indexOf(value) !== -1
         },
         onNodeClick(data){
+            if(data.otype !== "org"){
+                this.$message.info("请选择一个组");
+                return false;
+            }
             this.$emit('update:selectedLdapToMove', data);
         }
     }

@@ -51,8 +51,8 @@
                 <el-input v-model="dt.search" clearable placeholder="关键字"></el-input>
             </template>
             <template slot-scope="scope">
-              <el-button type="text" @click="onEdit(scope.$index, scope.row)"> 编辑</el-button>
-              <el-button type="text" @click="onDelete(scope.$index, scope.row)"> 删除</el-button>
+              <el-button type="text" @click="onEdit(scope.row)"> 编辑</el-button>
+              <el-button type="text" @click="onDelete(scope.row)"> 删除</el-button>
               <el-switch v-model="scope.row['status']" 
                   active-color="#13ce66" 
                   inactive-color="#ff4949"
@@ -63,24 +63,25 @@
             </template>
         </el-table-column>
       </el-table>
+      <!-- 新建模版 -->
       <el-dialog
         title="新建模版"
         class="template-dialog"
-        :visible.sync="dialog.template.new.show"
+        :visible.sync="dialog.new.show"
         :append-to-body="true"
         :show-close="false"
         :close-on-press-escape="false"
         :close-on-click-modal="false"
         :destroy-on-close="true"
         @close="onReset('newTemplateForm')"
-        v-if="dialog.template.new.show">
+        v-if="dialog.new.show">
           <div style="display:flex;flex-wrap:nowrap;">
-            <el-form :model="dialog.template.new.data" :rules="dialog.template.new.rules" 
+            <el-form :model="dialog.new.data" :rules="dialog.new.rules" 
               ref="newTemplateForm" label-width="100px"
               style="width:65%;">
               
               <el-form-item label="名称" prop="name">
-                <el-input v-model="dialog.template.new.data.name"></el-input>
+                <el-input v-model="dialog.new.data.name"></el-input>
               </el-form-item>
 
               <el-form-item label="数据源">
@@ -98,30 +99,50 @@
                   <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择数据源</span>
               </el-form-item>
 
-              <el-form-item label="属性" v-if="dialog.template.datasource.data">
-                  <DataFieldsView :fields="dialog.template.datasource.data.fields" 
-                      @fields-change="onDataFieldsSelect($event,'new')"
-                      @node-click="onDataFieldsSelect($event,'new')"
-                      style="width:50%"></DataFieldsView>
-                      <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成通知模版</span>
-              </el-form-item>
-              
+              <template v-if="dialog.new.data.content.class">
+                
+                <el-form-item label="属性">
+                    <DataFieldsView :fields="dialog.template.datasource.fields" 
+                        @fields-change="onDataFieldsSelect($event,'new')"
+                        @node-click="onDataFieldsSelect($event,'new')"
+                        style="width:50%"></DataFieldsView>
+                        <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成通知模版</span>
+                </el-form-item>
+                <el-form-item label="抑制策略">
+                  <DataFieldsView :fields="dialog.template.datasource.fields" 
+                        @fields-change="onCompressionFieldsSelect($event,'new')"
+                        @node-click="onCompressionFieldsSelect($event,'new')"
+                        style="width:50%"></DataFieldsView>
+                        <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成抑制主键</span>
+                  <p>
+                    <el-input-number v-model="dialog.new.data.content.compression.timer" :min="0"></el-input-number>
+                    <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 抑制时间窗口(单位：秒)</span>
+                  </p>
+                </el-form-item>
+              </template>
               <el-form-item label="模版定义" prop="content">
-                <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 通知模版由所选属性生成，也可自行调整添加常量属性，支持HTML格式化。</span>
+                  <el-switch v-model="dialog.new.data.content.html"
+                    active-color="#13ce66"
+                    active-text="HTML"
+                    inactive-text=""
+                    :active-value="true"
+                    :inactive-value="false"></el-switch>
+                <span style="display:none;">
                   <VueEditor
-                      v-model="dialog.template.new.data.content"
+                      v-model="dialog.new.data.souce"
                       @init="onEditorInit"
                       :lang="editor.lang.value"
                       :theme="editor.theme.value"
                       width="100%"
-                      height="calc(100vh - 380px)"
+                      height="calc(100vh - 500px)"
                       style="box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);border: 3px solid #dddddd;border-radius: 15px;"
                       ref="editorRef"
                   ></VueEditor>
+                </span>
               </el-form-item>
               <el-form-item label="状态" prop="status">
                 <el-switch
-                  v-model="dialog.template.new.data.attr.status"
+                  v-model="dialog.new.data.attr.status"
                   active-color="#13ce66"
                   inactive-color="#dddddd"
                   active-value="1"
@@ -131,9 +152,6 @@
             </el-form>
             <div style="width:35%;margin-top:-70px;">
                 
-                <!-- <div v-for="(v,k) in getTemplate(dialog.template.new.data.content)" :key="k" v-if="newTemplatePriview">
-                    {{k}}{{v}}
-                </div> -->
                 <div class="iphone">
                   <div class="iphone-top">
                     <span class="camera"></span>
@@ -151,28 +169,30 @@
           </div>
           
         <span slot="footer" class="dialog-footer">
-          <el-button @click="dialog.template.new.show = false">取 消</el-button>
+          <el-button @click="dialog.new.show = false">取 消</el-button>
           <el-button @click="onReset('newTemplateForm')">重置</el-button>
-          <el-button type="primary" @click="onSave" :loading="dialog.template.new.loading">确 定</el-button>
+          <el-button type="primary" @click="onSave" :loading="dialog.new.loading">确 定</el-button>
         </span>
       </el-dialog>
+      <!-- 编辑模版 -->
       <el-dialog
         title="模版管理"
         class="template-dialog"
-        :visible.sync="dialog.template.edit.show"
+        :visible.sync="dialog.edit.show"
         :append-to-body="true"
         :show-close="false"
         :close-on-press-escape="false"
         :close-on-click-modal="false"
         :destroy-on-close="true"
-        v-if="dialog.template.edit.show">
+        v-if="dialog.edit.show">
         <div style="display:flex;flex-wrap:nowrap;">
-          <el-form :model="dialog.template.edit.data" :rules="dialog.template.edit.rules" 
+          <el-form :model="dialog.edit.data" :rules="dialog.edit.rules" 
             ref="editTemplateForm" label-width="100px"
-            style="width:70%;">
+            style="width:70%;"
+            v-if="dialog.edit.data.content">
             
             <el-form-item label="名称" prop="name">
-              <el-input v-model="dialog.template.edit.data.name" disabled></el-input>
+              <el-input v-model="dialog.edit.data.name" disabled></el-input>
             </el-form-item>
 
             <el-form-item label="数据源">
@@ -182,7 +202,8 @@
                             <i class="el-icon-coin el-icon--right" style="cursor:pointer;"></i>
                         </span>
                         <el-dropdown-menu slot="dropdown">
-                            <DatasourceView :root="dialog.template.datasource.root" 
+                            <DatasourceView ref="datasourceEditRef"
+                                :root="dialog.template.datasource.root" 
                                 @node-click="onDataSourceSelect($event,'edit')"></DatasourceView>
                         </el-dropdown-menu>
                     </el-dropdown>
@@ -190,30 +211,52 @@
                 <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择数据源</span>
             </el-form-item>
 
-            <el-form-item label="属性" v-if="dialog.template.datasource.data">
-                <DataFieldsView :fields="dialog.template.datasource.data.fields" 
+            <el-form-item label="属性" v-if="dialog.template.datasource.class">
+              
+                <DataFieldsView :fields="dialog.template.datasource.fields"
                     @fields-change="onDataFieldsSelect($event,'edit')"
                     @node-click="onDataFieldsSelect($event,'edit')"
+                    :selected="dialog.edit.data.content.fields"
                     style="width:50%"></DataFieldsView>
-                    <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成通知模版</span>
+                  <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成通知模版</span>
             </el-form-item>
-            
+            <el-form-item label="抑制策略" v-if="dialog.template.datasource.class">
+              <DataFieldsView :fields="dialog.template.datasource.fields" 
+                    @fields-change="onCompressionFieldsSelect($event,'edit')"
+                    @node-click="onCompressionFieldsSelect($event,'edit')"
+                    :selected="dialog.edit.data.content.compression.keys"
+                    style="width:50%"></DataFieldsView>
+                    <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成抑制主键</span>
+              <p>
+                <el-input-number v-model="dialog.edit.data.content.compression.timer" :min="0"></el-input-number>
+                <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 抑制时间窗口(单位：秒)</span>
+              </p>
+            </el-form-item>
+
             <el-form-item label="模版定义" prop="content">
-              <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 通知模版由所选属性生成，也可自行调整添加常量属性，支持HTML格式化。</span>
-              <VueEditor
-                  v-model="dialog.template.edit.data.content"
-                  @init="onEditorInit"
-                  :lang="editor.lang.value"
-                  :theme="editor.theme.value"
-                  width="100%"
-                  height="calc(100vh - 380px)"
-                  style="box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);border: 3px solid #dddddd;border-radius: 15px;"
-                  ref="editorRef"
-              ></VueEditor>
+                <el-switch v-model="dialog.edit.data.content.html"
+                  active-color="#13ce66"
+                  active-text="HTML"
+                  inactive-text=""
+                  :active-value="true"
+                  :inactive-value="false"></el-switch>
+              <span style="display:none;">
+                <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 通知模版由所选属性生成，也可自行调整添加常量属性，支持HTML格式化。</span>
+                <VueEditor
+                    v-model="dialog.edit.data.source"
+                    @init="onEditorInit"
+                    :lang="editor.lang.value"
+                    :theme="editor.theme.value"
+                    width="100%"
+                    height="calc(100vh - 500px)"
+                    style="box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);border: 3px solid #dddddd;border-radius: 15px;"
+                    ref="editorRef"
+                ></VueEditor>
+              </span>
             </el-form-item>
             <el-form-item label="状态" prop="status">
               <el-switch
-                v-model="dialog.template.edit.data.attr.status"
+                v-model="dialog.edit.data.attr.status"
                 active-color="#13ce66"
                 inactive-color="#dddddd"
                 active-value="1"
@@ -241,8 +284,8 @@
 
         </div>
         <span slot="footer" class="dialog-footer">
-          <el-button @click="dialog.template.edit.show = false">取 消</el-button>
-          <el-button type="primary" @click="onUpdate" :loading="dialog.template.edit.loading">确 定</el-button>
+          <el-button @click="dialog.edit.show = false">取 消</el-button>
+          <el-button type="primary" @click="onUpdate" :loading="dialog.edit.loading">确 定</el-button>
         </span>
       </el-dialog>
     </el-main>
@@ -288,8 +331,36 @@ export default {
               fields: [],
               class: "",
               data: null
+          }
+        },
+        new:{
+          loading: false,
+          show: false,
+          data: {
+            name: "",
+            ftype: "json",
+            attr: {remark: "",status:0},
+            parent: `/script/matrix/m3event/notify/template`,
+            source: "",
+            content: {
+              class: "",
+              fields: "",
+              compression:{
+                enable: false,
+                keys: [],
+                timer: 0
+              },
+              template: "",
+              html: false
+            }
           },
-          new:{
+          rules: {
+              name:[
+                { required: true, message: '请输入名称', trigger: 'blur' }
+              ]
+          }
+        },
+        edit: {
             loading: false,
             show: false,
             data: {
@@ -297,30 +368,24 @@ export default {
               ftype: "json",
               attr: {remark: "",status:0},
               parent: `/script/matrix/m3event/notify/template`,
-              content: ""
+              source: "",
+              content: {
+                class: "",
+                fields: "",
+                compression:{
+                  enable: false,
+                  keys: [],
+                  timer: 0
+                },
+                template: "",
+                html: false
+              }
             },
             rules: {
                 name:[
                   { required: true, message: '请输入名称', trigger: 'blur' }
                 ]
             }
-          },
-          edit: {
-              loading: false,
-              show: false,
-              data: {
-                name: "",
-                ftype: "json",
-                attr: {remark: "",status:0},
-                parent: `/script/matrix/m3event/notify/template`,
-                content: ""
-              },
-              rules: {
-                  name:[
-                    { required: true, message: '请输入名称', trigger: 'blur' }
-                  ]
-              }
-          }
         }
       },
       editor: {
@@ -340,14 +405,14 @@ export default {
   computed:{
     newTemplatePriview(){
       try{
-        return JSON.parse(this.dialog.template.new.data.content).template;
+        return this.dialog.new.data.content.template;
       }catch(err){
         return "";
       }
     },
     editTemplatePriview(){
       try{
-        return JSON.parse(this.dialog.template.edit.data.content).template; 
+        return this.dialog.edit.data.content.template; 
       }catch(err){
         return "";
       }
@@ -386,16 +451,42 @@ export default {
             })
           }
         }
+    },
+    'dialog.new.data.content':{
+      handler(val){
+        if(val.fields.length > 0){
+          val.template = val.fields.map(v=>{
+                                if(val.html){
+                                  return `<p>${v.toUpperCase()}：{{.${v}}}</p>`
+                                }else{
+                                  return `${v.toUpperCase()}：{{.${v}}} `
+                                }
+                            }).join("");
+        }
+        this.dialog.new.data.souce = JSON.stringify(val,null,2);
+      },
+      deep: true
+    },
+    'dialog.edit.data.content':{
+      handler(val){
+        if(val.fields.length > 0){
+          val.template = val.fields.map(v=>{
+                                if(val.html){
+                                  return `<p>${v.toUpperCase()}：{{.${v}}}</p>`
+                                }else{
+                                  return `${v.toUpperCase()}：{{.${v}}} `
+                                }
+                            }).join("");
+        }
+        this.dialog.edit.data.source = JSON.stringify(val,null,2);
+      },
+      deep: true
     }
   },
   created(){
      this.initData();
   },
   methods: {
-    getTemplate(data){
-      console.log(data)
-      return JSON.parse(data).template;
-    },
     initEditor(){
         let editor = this.$refs.editorRef.editor;
         
@@ -416,21 +507,14 @@ export default {
     /* 数据源选择切换 */
     onDataSourceSelect(data,ac){
       this.dialog.template.datasource.class = data.class;
-      this.dialog.template.datasource.data = data;
-
-      let content = this.dialog.template[ac].data.content?JSON.parse(this.dialog.template[ac].data.content):{};
-      content.class = data.class;
-      this.dialog.template[ac].data.content = JSON.stringify(content,null,2);
+      this.$set(this.dialog[ac].data.content, 'class', data.class);
+      this.dialog.template.datasource.fields = data.fields;
     },
     onDataFieldsSelect(data,ac){
-        this.dialog.template.datasource.fields = data;
-        
-        let content = JSON.parse(this.dialog.template[ac].data.content) ;
-        content.fields = data;
-        content.template = data.map(v=>{
-                            return `<p>${v.toUpperCase()}：{{.${v}}}</p>`
-                          }).join("");
-        this.dialog.template[ac].data.content = JSON.stringify(content,null,2);
+        this.$set(this.dialog[ac].data.content, 'fields', data);
+    },
+    onCompressionFieldsSelect(data,ac){
+        this.$set(this.dialog[ac].data.content.compression, 'keys', data);
     },
     initData(){
       this.m3.callFS("/matrix/m3event/notify/getTemplateList.js",null).then((rt)=>{
@@ -453,7 +537,7 @@ export default {
 
         setTimeout(()=>{
           this.$refs.table.doLayout();
-        },500)
+        },1000)
       });
     },
     onRefresh(){
@@ -463,20 +547,20 @@ export default {
       this.$refs[form].resetFields();
     },
     onNew(){
-      this.dialog.template.new.show = true;
+      this.dialog.new.show = true;
     },
     onSave(){
 
-      if(_.isEmpty(this.dialog.template.new.data.name)){
+      if(_.isEmpty(this.dialog.new.data.name)){
         this.$message.warning("请输入名称");
         return false;
       }
 
-      this.dialog.template.new.loading = true;
+      this.dialog.new.loading = true;
       
       let param = {
-                    parent: this.dialog.template.new.data.parent, name: [this.dialog.template.new.data.name,this.dialog.template.new.data.ftype].join(".").replace(/.json.json/,'.json'), 
-                    data: {content: this.dialog.template.new.data.content, ftype: this.dialog.template.new.data.ftype, attr: this.dialog.template.new.data.attr, index: true}    
+                    parent: this.dialog.new.data.parent, name: [this.dialog.new.data.name,this.dialog.new.data.ftype].join(".").replace(/.json.json/,'.json'), 
+                    data: {content: JSON.stringify(this.dialog.new.data.content,null,2), ftype: this.dialog.new.data.ftype, attr: this.dialog.new.data.attr, index: true}    
                   };
       this.m3.dfs.newFile(param).then((res)=>{
         
@@ -485,14 +569,14 @@ export default {
             message: "新建模板成功！"
           })  
           this.initData();
-          this.dialog.template.new.loading = false;
-          this.dialog.template.new.show = false;
+          this.dialog.new.loading = false;
+          this.dialog.new.show = false;
       }).catch((err)=>{
           this.$message({
             type: "error",
             message: "新建模板失败 " + err
           })
-          this.dialog.template.new.loading = false;
+          this.dialog.new.loading = false;
       })  
     },
     onToggleStatus(row){
@@ -509,7 +593,7 @@ export default {
           })
       })  
     },
-    onDelete(index,item){
+    onDelete(item){
       
       this.$confirm(`确认要删除该模板：${item.name}？`, '提示', {
           confirmButtonText: '确定',
@@ -540,17 +624,27 @@ export default {
         });
       })
     },
-    onEdit(index,item){
-      this.dialog.template.edit.show = true;
-      this.dialog.template.edit.data = item;
+    onEdit(item){
+      this.dialog.edit.data.name = item.title;
+      this.dialog.edit.show = true;
+      let content = JSON.parse(item.content);
+      
+      this.$set(this.dialog.edit.data,'content',content);
+      console.log(this.dialog.edit.data)
+      this.dialog.template.datasource.class = content.class;
+      
+      setTimeout(()=>{
+        let node = this.$refs.datasourceEditRef.$refs.tree.getNode(content.class);
+        this.dialog.template.datasource.fields = node.data.fields;
+      },1500)
     },
     onUpdate(){
 
-      this.dialog.template.edit.loading = true;
+      this.dialog.edit.loading = true;
       
       let param = {
-                    parent: this.dialog.template.edit.data.parent, name: [this.dialog.template.edit.data.name,this.dialog.template.edit.data.ftype].join(".").replace(/.json.json/,'.json'), 
-                    data: {content: this.dialog.template.edit.data.content, ftype: this.dialog.template.edit.data.ftype, attr: this.dialog.template.edit.data.attr, index: true}    
+                    parent: this.dialog.edit.data.parent, name: [this.dialog.edit.data.name,this.dialog.edit.data.ftype].join(".").replace(/.json.json/,'.json'), 
+                    data: {content: JSON.stringify(this.dialog.edit.data.content,null,2), ftype: this.dialog.edit.data.ftype, attr: this.dialog.edit.data.attr, index: true}    
                   };
       this.m3.dfs.newFile(param).then((res)=>{
         
@@ -559,14 +653,14 @@ export default {
             message: "更新模板成功！"
           })  
           this.initData();
-          this.dialog.template.edit.loading = false;
-          this.dialog.template.edit.show = false;
+          this.dialog.edit.loading = false;
+          this.dialog.edit.show = false;
       }).catch((err)=>{
           this.$message({
             type: "error",
             message: "更新模板失败 " + err
           })
-          this.dialog.template.edit.loading = false;
+          this.dialog.edit.loading = false;
       })  
     }
   }
