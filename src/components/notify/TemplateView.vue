@@ -66,7 +66,8 @@
       <!-- 新建模版 -->
       <el-dialog
         title="新建模版"
-        class="template-dialog"
+        width="80%"
+        style="height: auto;"
         :visible.sync="dialog.new.show"
         :append-to-body="true"
         :show-close="false"
@@ -75,7 +76,7 @@
         :destroy-on-close="true"
         @close="onReset('newTemplateForm')"
         v-if="dialog.new.show">
-          <div style="display:flex;flex-wrap:nowrap;">
+          <div style="display:flex;flex-wrap:nowrap;height:auto;padding:20px;background:#f2f2f2;">
             <el-form :model="dialog.new.data" :rules="dialog.new.rules" 
               ref="newTemplateForm" label-width="100px"
               style="width:65%;">
@@ -108,39 +109,49 @@
                         style="width:50%"></DataFieldsView>
                         <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成通知模版</span>
                 </el-form-item>
-                <el-form-item label="抑制策略">
-                  <DataFieldsView :fields="dialog.template.datasource.fields" 
-                        @fields-change="onCompressionFieldsSelect($event,'new')"
-                        @node-click="onCompressionFieldsSelect($event,'new')"
-                        style="width:50%"></DataFieldsView>
-                        <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成抑制主键</span>
-                  <p>
-                    <el-input-number v-model="dialog.new.data.content.compression.timer" :min="0"></el-input-number>
-                    <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 抑制时间窗口(单位：秒)</span>
-                  </p>
-                </el-form-item>
-              </template>
-              <el-form-item label="模版定义" prop="content">
-                  <el-switch v-model="dialog.new.data.content.html"
+                
+                <el-form-item label="开启抑制策略">
+                  <el-switch v-model="dialog.new.data.content.compression.enable"
                     active-color="#13ce66"
-                    active-text="HTML"
-                    inactive-text=""
                     :active-value="true"
                     :inactive-value="false"></el-switch>
-                <span style="display:none;">
-                  <VueEditor
-                      v-model="dialog.new.data.souce"
-                      @init="onEditorInit"
-                      :lang="editor.lang.value"
-                      :theme="editor.theme.value"
-                      width="100%"
-                      height="calc(100vh - 500px)"
-                      style="box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);border: 3px solid #dddddd;border-radius: 15px;"
-                      ref="editorRef"
-                  ></VueEditor>
-                </span>
-              </el-form-item>
-              <el-form-item label="状态" prop="status">
+                    <div v-if="dialog.new.data.content.compression.enable">
+                      <DataFieldsView :fields="dialog.template.datasource.fields" 
+                            @fields-change="onCompressionFieldsSelect($event,'new')"
+                            @node-click="onCompressionFieldsSelect($event,'new')"
+                            style="width:50%"></DataFieldsView>
+                            <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成抑制主键</span>
+                      <p>
+                        <el-input-number v-model="dialog.new.data.content.compression.timer" :min="0"></el-input-number>
+                        <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 抑制时间窗口(单位：秒)</span>
+                      </p>
+                    </div>
+                </el-form-item>
+                <el-form-item label="HTML支持" prop="content">
+                    <el-switch v-model="dialog.new.data.content.html"
+                      active-color="#13ce66"
+                      :active-value="true"
+                      :inactive-value="false"></el-switch>
+                </el-form-item>
+
+                <el-form-item>
+                  <span>
+                      <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 可自行调整添加常量属性</span>
+                      <VueEditor
+                          v-model="dialog.new.data.source"
+                          @init="onEditorInit"
+                          :lang="editor.lang.value"
+                          :theme="editor.theme.value"
+                          width="100%"
+                          height="calc(100vh - 560px)"
+                          style="box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);border: 3px solid #dddddd;border-radius: 15px;"
+                          ref="editorRef"
+                      ></VueEditor>
+                    </span>
+                </el-form-item>
+              </template>
+              
+              <el-form-item label="是否启用" prop="status">
                 <el-switch
                   v-model="dialog.new.data.attr.status"
                   active-color="#13ce66"
@@ -149,6 +160,7 @@
                   inactive-value="0">>
                 </el-switch>
               </el-form-item>
+              
             </el-form>
             <div style="width:35%;margin-top:-70px;">
                 
@@ -177,7 +189,8 @@
       <!-- 编辑模版 -->
       <el-dialog
         title="模版管理"
-        class="template-dialog"
+        width="80%"
+        style="height: auto;"
         :visible.sync="dialog.edit.show"
         :append-to-body="true"
         :show-close="false"
@@ -185,7 +198,7 @@
         :close-on-click-modal="false"
         :destroy-on-close="true"
         v-if="dialog.edit.show">
-        <div style="display:flex;flex-wrap:nowrap;">
+        <div style="display:flex;flex-wrap:nowrap;height:auto;padding:20px;background:#f2f2f2;">
           <el-form :model="dialog.edit.data" :rules="dialog.edit.rules" 
             ref="editTemplateForm" label-width="100px"
             style="width:70%;"
@@ -220,41 +233,50 @@
                     style="width:50%"></DataFieldsView>
                   <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成通知模版</span>
             </el-form-item>
-            <el-form-item label="抑制策略" v-if="dialog.template.datasource.class">
-              <DataFieldsView :fields="dialog.template.datasource.fields" 
-                    @fields-change="onCompressionFieldsSelect($event,'edit')"
-                    @node-click="onCompressionFieldsSelect($event,'edit')"
-                    :selected="dialog.edit.data.content.compression.keys"
-                    style="width:50%"></DataFieldsView>
-                    <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成抑制主键</span>
-              <p>
-                <el-input-number v-model="dialog.edit.data.content.compression.timer" :min="0"></el-input-number>
-                <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 抑制时间窗口(单位：秒)</span>
-              </p>
+            <el-form-item label="开启抑制策略" v-if="dialog.template.datasource.class">
+              <el-switch v-model="dialog.edit.data.content.compression.enable"
+                    active-color="#13ce66"
+                    :active-value="true"
+                    :inactive-value="false"></el-switch>
+              <div v-if="dialog.edit.data.content.compression.enable">
+                <DataFieldsView :fields="dialog.template.datasource.fields" 
+                      @fields-change="onCompressionFieldsSelect($event,'edit')"
+                      @node-click="onCompressionFieldsSelect($event,'edit')"
+                      :selected="dialog.edit.data.content.compression.keys"
+                      style="width:50%"></DataFieldsView>
+                      <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成抑制主键</span>
+                <p>
+                  <el-input-number v-model="dialog.edit.data.content.compression.timer" :min="0"></el-input-number>
+                  <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 抑制时间窗口(单位：秒)</span>
+                </p>
+              </div>
             </el-form-item>
 
-            <el-form-item label="模版定义" prop="content">
+            <el-form-item label="HTML支持" prop="content">
                 <el-switch v-model="dialog.edit.data.content.html"
                   active-color="#13ce66"
-                  active-text="HTML"
-                  inactive-text=""
                   :active-value="true"
                   :inactive-value="false"></el-switch>
-              <span style="display:none;">
-                <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 通知模版由所选属性生成，也可自行调整添加常量属性，支持HTML格式化。</span>
+            </el-form-item>
+            
+            <el-form-item>
+              <span>
+                <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 可自行调整添加常量属性</span>
                 <VueEditor
                     v-model="dialog.edit.data.source"
                     @init="onEditorInit"
                     :lang="editor.lang.value"
                     :theme="editor.theme.value"
                     width="100%"
-                    height="calc(100vh - 500px)"
+                    height="calc(100vh - 525px)"
                     style="box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);border: 3px solid #dddddd;border-radius: 15px;"
                     ref="editorRef"
                 ></VueEditor>
               </span>
             </el-form-item>
-            <el-form-item label="状态" prop="status">
+
+             <el-form-item label="是否启用" prop="status">
+              
               <el-switch
                 v-model="dialog.edit.data.attr.status"
                 active-color="#13ce66"
@@ -263,6 +285,7 @@
                 inactive-value="0">>
               </el-switch>
             </el-form-item>
+
           </el-form>
 
           <div style="width:30%;margin-top:-70px;">
@@ -339,7 +362,7 @@ export default {
           data: {
             name: "",
             ftype: "json",
-            attr: {remark: "",status:0},
+            attr: {remark: "",status:"0"},
             parent: `/script/matrix/m3event/notify/template`,
             source: "",
             content: {
@@ -366,7 +389,7 @@ export default {
             data: {
               name: "",
               ftype: "json",
-              attr: {remark: "",status:0},
+              attr: {remark: "",status:"0"},
               parent: `/script/matrix/m3event/notify/template`,
               source: "",
               content: {
@@ -454,39 +477,87 @@ export default {
     },
     'dialog.new.data.content':{
       handler(val){
-        if(val.fields.length > 0){
-          val.template = val.fields.map(v=>{
-                                if(val.html){
-                                  return `<p>${v.toUpperCase()}：{{.${v}}}</p>`
-                                }else{
-                                  return `${v.toUpperCase()}：{{.${v}}} `
-                                }
-                            }).join("");
-        }
-        this.dialog.new.data.souce = JSON.stringify(val,null,2);
+        // 根据fields的name找出title，生产模版用做title显示用
+        let content = this.genTemplateByFields(val);
+        this.dialog.new.data.source = JSON.stringify(content,null,2);
       },
       deep: true
     },
     'dialog.edit.data.content':{
       handler(val){
-        if(val.fields.length > 0){
-          val.template = val.fields.map(v=>{
-                                if(val.html){
-                                  return `<p>${v.toUpperCase()}：{{.${v}}}</p>`
-                                }else{
-                                  return `${v.toUpperCase()}：{{.${v}}} `
-                                }
-                            }).join("");
-        }
-        this.dialog.edit.data.source = JSON.stringify(val,null,2);
+        // 根据fields的name找出title，生产模版用做title显示用
+        let content = this.genTemplateByFields(val);
+        this.dialog.edit.data.source = JSON.stringify(content,null,2);
       },
-      deep: true
+      deep: true,
+      immediate: true
+    },
+    'dialog.new.data.content.compression.enable'(val){
+      if(!val){
+        this.dialog.new.data.content.compression.keys = [];
+        this.dialog.new.data.content.compression.timer = 0;
+      }
+    },
+    'dialog.edit.data.content.compression.enable'(val){
+      if(!val){
+        this.dialog.edit.data.content.compression.keys = [];
+        this.dialog.edit.data.content.compression.timer = 0;
+      }
+    },
+    'dialog.new.data.content.compression.timer'(val){
+      if(val === 0){
+        this.dialog.new.data.content.compression.enable = false;
+      }else{
+        this.dialog.new.data.content.compression.enable = true;
+      }
+    },
+    'dialog.new.data.content.compression.enable'(val){
+      if(!val){
+        this.dialog.new.data.content.compression.timer = 0;
+      } 
+    },
+    'dialog.edit.data.content.compression':{
+      handler(val){
+        if(val.keys.length > 0 && val.timer > 0){
+          this.dialog.edit.data.content.compression.enable = true;
+        }else{
+          this.dialog.edit.data.content.compression.enable = false;
+        }
+      }
+    },
+    'dialog.edit.data.content.compression.enable':{
+      handler(val){
+        if(!val){
+          this.dialog.edit.data.content.compression.timer = 0;
+          this.dialog.edit.data.content.compression.keys = [];
+        } 
+      }
     }
   },
   created(){
      this.initData();
   },
   methods: {
+    genTemplateByFields(data){
+      // 根据fields的name找出title，生产模版用做title显示用
+      if(_.isEmpty(data.fields)){
+        data.template = "";
+      } else{
+          data.template = data.fields.map(v=>{
+                                let field = _.find(this.dialog.template.datasource.fields,{name:v});
+                                let title = v.toUpperCase();
+                                if(field){
+                                  title = field.title;
+                                }
+                                if(data.html){
+                                  return `<p>${title}：{{.${v}}}</p>`
+                                }else{
+                                  return `${title}：{{.${v}}} `
+                                }
+                            }).join("");
+      }
+      return data;
+    },
     initEditor(){
         let editor = this.$refs.editorRef.editor;
         
@@ -626,11 +697,12 @@ export default {
     },
     onEdit(item){
       this.dialog.edit.data.name = item.title;
+      this.dialog.edit.data.attr = item.attr;
       this.dialog.edit.show = true;
       let content = JSON.parse(item.content);
       
       this.$set(this.dialog.edit.data,'content',content);
-      console.log(this.dialog.edit.data)
+      console.log(item,this.dialog.edit.data)
       this.dialog.template.datasource.class = content.class;
       
       setTimeout(()=>{
@@ -672,11 +744,6 @@ export default {
   
   .el-main{
     overflow: hidden;
-  }
-
-  .template-dialog /deep/ .el-dialog{
-    width: 80vw!important;
-    height: auto;
   }
 
   /* 样式1 */
@@ -739,7 +806,7 @@ export default {
       background: #eee;
       border: 1px solid #fff;
       height: 100%;
-      min-height: 70vh;
+      min-height: 60vh;
       width: 100%;
       margin: 0 auto;
       border: 2px solid rgba(0, 0, 0, 0.9);

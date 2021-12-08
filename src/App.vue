@@ -140,11 +140,11 @@ export default {
     font-size:4pt;
   }
 
-  .el-dialog{
+  /* .el-dialog{
       width: 90vw!important;
       height:auto;
       margin-top: 0!important;
-  }
+  } */
   
   /* el-checkbox */
   .el-checkbox__label {
