@@ -47,11 +47,12 @@ export default {
         nodes:{
             handler(){
                 // 只显示组织
-                if(this.$refs.tree){
-                    this.$refs.tree.filter('org');	
-                }
-            },
-            deep:true
+                this.$nextTick(()=>{
+                    if(this.$refs.tree){
+                        this.$refs.tree.filter('org');	
+                    }
+                })
+            }
         }
     },
     created(){

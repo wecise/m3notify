@@ -16,6 +16,8 @@
     </el-header>
     <el-main>
       <el-table
+        v-loading="dt.loading"
+        element-loading-spinner="el-icon-loading"
         :data="dt.rows"
         stripe
         border
@@ -97,6 +99,7 @@
               :options="persons.list"
               :props="persons.props"
               clearable
+              filterable
               style="width:100%;"
               >              
               <template slot-scope="{ node, data }">
@@ -111,7 +114,7 @@
               </el-cascader>
           </el-form-item>
           <el-form-item label="通知类型" prop="rtype">
-            <el-select v-model="dialog.rule.new.data.rtype" multiple placeholder="请选择" style="width:100%;">
+            <el-select v-model="dialog.rule.new.data.rtype" multiple placeholder="请选择" filterable style="width:100%;">
               <el-option
                 v-for="item in rtype.list"
                 :key="item.name"
@@ -123,7 +126,7 @@
             </el-select>
           </el-form-item>
           <el-form-item label="通知规则" prop="situation">
-            <el-select v-model="dialog.rule.new.data.situation" placeholder="请选择">
+            <el-select v-model="dialog.rule.new.data.situation" filterable placeholder="请选择">
               <el-option
                 v-for="item in situation.list"
                 :key="item.id"
@@ -137,7 +140,7 @@
             </el-select>
           </el-form-item>
           <el-form-item label="通知模版" prop="template">
-            <el-select v-model="dialog.rule.new.data.template" value-key="fullname" placeholder="请选择">
+            <el-select v-model="dialog.rule.new.data.template" value-key="fullname" filterable placeholder="请选择">
               <el-option
                 v-for="item in templates.list"
                 :key="item.fullname"
@@ -181,6 +184,7 @@
               :options="persons.list"
               :props="persons.props"
               clearable
+              filterable
               style="width:100%;">              
               <template slot-scope="{ node, data }">
                 <span v-if="data.username==='/'">{{m3.auth.Company.fullname}}</span>
@@ -194,7 +198,7 @@
               </el-cascader>
           </el-form-item>
           <el-form-item label="通知类型" prop="rtype">
-            <el-select v-model="dialog.rule.edit.data.rtype" multiple placeholder="请选择" style="width:100%;">
+            <el-select v-model="dialog.rule.edit.data.rtype" multiple placeholder="请选择" style="width:100%;" filterable>
               <el-option
                 v-for="item in rtype.list"
                 :key="item.name"
@@ -209,7 +213,7 @@
             <el-input placeholder="选择通知规则" :value="situation.list,dialog.rule.edit.data.situation | getSituationName">
                   <template slot="prepend">
                     <i class="el-icon-tickets"></i>
-                    <el-select v-model="dialog.rule.edit.data.situation" value-key="id" placeholder="请选择" style="width:47px;">
+                    <el-select v-model="dialog.rule.edit.data.situation" value-key="id" placeholder="请选择" filterable style="width:47px;">
                       <el-option
                         v-for="item in situation.list"
                         :key="item.id"
@@ -227,7 +231,7 @@
             <el-input placeholder="选择通知模版" :value="dialog.rule.edit.data.template.title" v-if="dialog.rule.edit.data.template">
                   <template slot="prepend">
                     <i class="el-icon-notebook-2"></i>
-                    <el-select v-model="dialog.rule.edit.data.template" value-key="name" placeholder="请选择" style="width:47px;">
+                    <el-select v-model="dialog.rule.edit.data.template" value-key="name" placeholder="请选择" filterable style="width:47px;">
                       <el-option
                         v-for="item in templates.list"
                         :key="item.name"
@@ -271,6 +275,7 @@ export default {
     return {
       loading: false,
       dt: {
+        loading: false,
         rows:[],
         columns: [],
         selected: [],
@@ -391,8 +396,8 @@ export default {
                   
                   this.dt.info = [];
                   this.dt.info.push(`共 ${val.length} 项`);
-                  this.dt.info.push(`已选择 ${this.dt.selected.length} 项`);
-                  this.dt.info.push(this.moment().format("YYYY-MM-DD HH:mm:ss.SSS"));
+                  //this.dt.info.push(`已选择 ${this.dt.selected.length} 项`);
+                  this.dt.info.push(`操作时间： ${this.moment().format("YYYY-MM-DD HH:mm:ss.SSS")}`);
 
               }
           },
@@ -402,8 +407,8 @@ export default {
           handler(val){
               this.dt.info = [];
               this.dt.info.push(`共 ${this.dt.rows.length} 项`);
-              this.dt.info.push(`已选择 ${val.length} 项`);
-              this.dt.info.push(this.moment().format("YYYY-MM-DD HH:mm:ss.SSS"));
+              //this.dt.info.push(`已选择 ${val.length} 项`);
+              this.dt.info.push(`操作时间： ${this.moment().format("YYYY-MM-DD HH:mm:ss.SSS")}`);
           }
       }
   },
@@ -432,9 +437,12 @@ export default {
           
         }));
 
+        this.$nextTick(()=>{
+          this.$refs.table.doLayout();
+        })
         setTimeout(()=>{
           this.$refs.table.doLayout();
-        },1500)
+        },1000)
       })
     },
     // 递归判断列表，把最后的children设为undefined
@@ -451,7 +459,7 @@ export default {
       return data;
     },
     init(){
-
+      this.dt.loading = true;
       this.m3.callFS("/matrix/m3system/ldap/ldap.js").then(rtn=>{
           this.persons.userList = rtn.message;
       })
@@ -469,6 +477,10 @@ export default {
       let param = encodeURIComponent( JSON.stringify({action:'list'}) );
       this.m3.callFS("/matrix/m3event/notify/situationAction.js",param).then(rtn=>{
         this.situation.list = rtn.message.rows;
+        this.dt.loading = false;
+      }).catch(err=>{
+        console.error(err);
+        this.dt.loading = false;
       })
     },
     rowClassName({rowIndex}){
@@ -630,6 +642,10 @@ export default {
     },
     onToggleStatus(row){
       
+      let template = _.find(this.templates.list, {value:row.template});
+
+      this.$set(row,'template',template);
+
       let param = encodeURIComponent(JSON.stringify({
                     action: 'update',
                     model: row
@@ -637,7 +653,7 @@ export default {
       this.m3.callFS("/matrix/m3event/notify/ruleAction.js",param).then(()=>{
           
           this.$message({
-            type: "success",
+            type: row.status ? "success" : "info",
             message: row.status ? "策略已启用" : "策略已停止"
           })
 

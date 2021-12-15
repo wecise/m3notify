@@ -1,5 +1,5 @@
 <template>
-  <el-container style="height:calc(100vh - 135px);">
+  <el-container style="height:calc(100vh - 135px);" @mouseover.native="onLayout">
     <el-header style="position:relative;height: 40px!important;line-height: 40px!important;">
       <el-tooltip content="刷新模板">
         <el-button type="text" icon="el-icon-refresh" @click="onRefresh"></el-button>
@@ -16,6 +16,8 @@
     </el-header>
     <el-main>
       <el-table
+        v-loading="dt.loading"
+        element-loading-spinner="el-icon-loading"
         border
         stripe
         :data="dt.rows"
@@ -340,6 +342,7 @@ export default {
   data() {
     return {
       dt: {
+        loading: false,
         rows:[],
         columns: [],
         selected: [],
@@ -449,8 +452,8 @@ export default {
                 
                 this.dt.info = [];
                 this.dt.info.push(`共 ${val.length} 项`);
-                this.dt.info.push(`已选择 ${this.dt.selected.length} 项`);
-                this.dt.info.push(this.moment().format("YYYY-MM-DD HH:mm:ss.SSS"));
+                //this.dt.info.push(`已选择 ${this.dt.selected.length} 项`);
+                this.dt.info.push(`操作时间： ${this.moment().format("YYYY-MM-DD HH:mm:ss.SSS")}`);
 
             }
         },
@@ -460,8 +463,8 @@ export default {
         handler(val){
             this.dt.info = [];
             this.dt.info.push(`共 ${this.dt.rows.length} 项`);
-            this.dt.info.push(`已选择 ${val.length} 项`);
-            this.dt.info.push(this.moment().format("YYYY-MM-DD HH:mm:ss.SSS"));
+            //this.dt.info.push(`已选择 ${val.length} 项`);
+            this.dt.info.push(`操作时间： ${this.moment().format("YYYY-MM-DD HH:mm:ss.SSS")}`);
         }
     },
     'dt.search':{
@@ -558,6 +561,11 @@ export default {
       }
       return data;
     },
+    onLayout(){
+      this.$nextTick(()=>{
+          this.$refs.table.doLayout();
+      })
+    },
     initEditor(){
         let editor = this.$refs.editorRef.editor;
         
@@ -588,6 +596,7 @@ export default {
         this.$set(this.dialog[ac].data.content.compression, 'keys', data);
     },
     initData(){
+      this.dt.loading = true;
       this.m3.callFS("/matrix/m3event/notify/getTemplateList.js",null).then((rt)=>{
         let rtn = rt.message;
 
@@ -606,9 +615,17 @@ export default {
           
         }));
 
+        this.$nextTick(()=>{
+          this.$refs.table.doLayout();
+        })
         setTimeout(()=>{
           this.$refs.table.doLayout();
         },1000)
+
+        this.dt.loading = false;
+      }).catch(err=>{
+        console.error(err);
+        this.dt.loading = false;
       });
     },
     onRefresh(){
@@ -653,14 +670,15 @@ export default {
     onToggleStatus(row){
       
       let attr = _.extend(row.attr, {status:row.status});
+      
       let param = {
                     parent: row.parent, name: [row.name,row.ftype].join(".").replace(/.json.json/,'.json'), 
                     data: {content: row.content, ftype: row.ftype, attr: attr, index: true}    
                   };
       this.m3.dfs.newFile(param).then(()=>{
           this.$message({
-            type: "success",
-            message: row.status ? "模板已启用" : "模板已禁用"
+            type: row.status==1 ? "success" : "info",
+            message: row.status==1 ? "模板已启用" : "模板已禁用"
           })
       })  
     },

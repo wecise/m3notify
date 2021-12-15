@@ -430,33 +430,6 @@
                 });
                 
             },
-            onUserGroupMovedAction(user,newGroup){
-                
-                userHandler.userGruopUpdateAsync(user, newGroup).then( (rtn)=>{
-                    if(rtn.status == 1){
-                        /* this.$message({
-                            type: "success",
-                            message: "更新组成功"
-                        }) */
-
-                        this.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$refs.ldapManage.onRefresh();
-                        this.dialog.user.row.id = rtn.id;
-                        this.dialog.user.row.parent = newGroup.fullname;
-                        
-                    } else{
-                        /* this.$message({
-                            type: "error",
-                            s
-                            message: "更新组失败 " + rtn
-                        }) */
-                    }
-
-                    this.dialog.user.changeGroup.change = false;
-                    this.dialog.user.changeGroup.user = null;
-                    this.dialog.user.changeGroup.newGroup = null;
-                } )
-                
-            },
             onSaveUser(row){
                 
                 if(this.dialog.user.resetPasswd){
@@ -550,7 +523,7 @@
                             })
 
                             if(this.dialog.user.changeGroup.change){
-                                this.onUserGroupMovedAction(this.dialog.user.changeGroup.user,this.dialog.user.changeGroup.newGroup);
+                                this.onUserGroupMoved(this.dialog.user.changeGroup.user,this.dialog.user.changeGroup.newGroup);
                             }
 
                             this.dialog.user.show = false;

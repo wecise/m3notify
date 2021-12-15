@@ -1,5 +1,5 @@
 <template>
-    <el-container style="height:calc(100vh - 135px);">
+    <el-container style="height:calc(100vh - 135px);" @mouseover.native="onLayout">
         <el-header>
             <el-tooltip content="刷新">
                 <el-button type="text" icon="el-icon-refresh" @click="onRefresh"></el-button>
@@ -7,8 +7,8 @@
         </el-header>
         <el-main style="overflow: hidden;">
             <el-table
-                :loading="dt.loading"
-                stripe
+                v-loading="dt.loading"
+                element-loading-spinner="el-icon-loading"
                 :data="dt.rows"
                 :row-class-name="rowClassName"
                 height="calc(100vh - 255px)"
@@ -48,6 +48,7 @@
                     </template>
                 </el-table-column>
             </el-table>
+            <!-- 发送日志 -->
             <el-drawer
                 :title="'发送日志 ' + dt.drawer.sendstatus.data.id"
                 :visible.sync="dt.drawer.sendstatus.show"
@@ -190,8 +191,8 @@
                         
                         this.dt.info = [];
                         this.dt.info.push(`共 ${val.length} 项`);
-                        this.dt.info.push(`已选择 ${this.dt.selected.length} 项`);
-                        this.dt.info.push(this.moment().format("YYYY-MM-DD HH:mm:ss.SSS"));
+                        //this.dt.info.push(`已选择 ${this.dt.selected.length} 项`);
+                        this.dt.info.push(`操作时间： ${this.moment().format("YYYY-MM-DD HH:mm:ss.SSS")}`);
 
                     }
                 },
@@ -201,8 +202,8 @@
                 handler(val){
                     this.dt.info = [];
                     this.dt.info.push(`共 ${this.dt.rows.length} 项`);
-                    this.dt.info.push(`已选择 ${val.length} 项`);
-                    this.dt.info.push(this.moment().format("YYYY-MM-DD HH:mm:ss.SSS"));
+                    //this.dt.info.push(`已选择 ${val.length} 项`);
+                    this.dt.info.push(`操作时间： ${this.moment().format("YYYY-MM-DD HH:mm:ss.SSS")}`);
                 }
             },
             'dt.filter':{
@@ -218,10 +219,11 @@
             }
         },
         methods: {
-            onLayout:_.debounce(()=>{
-                console.log(_.now(),this.$refs)
-                this.$refs.table.doLayout();
-            },1000),
+            onLayout(){
+                this.$nextTick(()=>{
+                    this.$refs.table.doLayout();
+                })
+            },
             rowClassName({rowIndex}){
                 return `row-${rowIndex}`;
             },
@@ -251,6 +253,7 @@
                     })
                     this.dt.loading = false;
                 }).catch(err=>{
+                    console.error(err);
                     this.dt.loading = false;
                 });
             },
@@ -274,7 +277,6 @@
                 return Papa.unparse(this.decodeBase64Content(content));
             },
             getSendStatus(data,index){
-                console.log(data.sendStatus[index].status)
                 try{
                     return data.sendStatus[index].status;
                 }catch(err){
@@ -307,8 +309,7 @@
       padding: 15px;
       border-radius: 50px;
       height: auto;
-      width: 70%;
-      margin: 0px 10%;
+      width: 90%;
       position: relative;
       -webkit-transform: scale(0.8);
       transform: scale(0.8);

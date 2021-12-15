@@ -38,6 +38,9 @@ import PropsBase from './PropsBase.vue'
             }
         },
         watch:{
+            fields(val){
+                this.onRemoveAll();
+            },  
             attrs:{
                 handler(val){
                     this.onRefreshProps(val);
@@ -73,13 +76,14 @@ import PropsBase from './PropsBase.vue'
             onRemoveAll(){
                 this.attrs.splice(0);
                 this.onNewProp();
+                this.$refs.props[0].fieldSelected = "";
             },
             onRefreshProps(data){
                 
                 let mqlStr = _.compact(data.map(v=>{
                     if(v.value){
                         if(_.includes(['varchar'],v.ftype)){
-                            return `${v.field} ${v.operator} ''${v.value}''`;
+                            return `${v.field} ${v.operator} '${v.value}'`;
                         } else{
                             return `${v.field} ${v.operator} ${v.value}`;
                         }

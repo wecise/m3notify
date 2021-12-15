@@ -1,6 +1,7 @@
 <template>
     <div v-if="model" class="box">
-        <el-select v-model="fieldSelected" placeholder="属性" style="width:30%;">
+        <el-select v-model="fieldSelected" filterable value-key="name" placeholder="属性" style="width:30%;">
+            <el-option label="" value="" />
             <el-option :label="att.name" :value="att.name" :key="att.name" v-for="att in attrs">
                 <span style="float: left">{{ att.name }}</span>
                 <span style="float: right; color: #8492a6; font-size: 13px">{{ att.ftype }}</span>
@@ -166,6 +167,7 @@
             },
             onRemove(data){
                 this.$emit("remove-prop",data);
+                this.fieldSelected = "";
             }
         }
         

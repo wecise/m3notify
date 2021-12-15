@@ -1,102 +1,11 @@
 <template>
   <el-container style="height: calc(100vh - 135px);">
     <el-main style="padding:0px;">
-        <Split :gutterSize="5">
-            <SplitArea :size="20" :minSize="0" style="overflow:hidden;background:#f2f2f2;">
+        <Split :gutterSize="0" style="display:flex;">
+            <SplitArea :size="0" :minSize="0" style="overflow:hidden;background:#f2f2f2;">
                 <TagTreeView :model="{domain:'notifySituation'}" :fun="onRefreshByTag" ref="notifySituationTagTree"></TagTreeView>
-                  <el-dialog
-                    title="分类管理"
-                    :visible.sync="dialog.classified.show"
-                    :append-to-body="true"
-                    class="classified-dialog">
-                    <el-form :model="dialog.classified.data"  :rules="dialog.classified.rules" ref="classifiedForm" label-width="100px">
-                      
-
-                      <el-form-item label="父节点" prop="parent">
-                        <el-input v-model="dialog.classified.data.parent" disabled></el-input>
-                      </el-form-item>
-
-                      <el-form-item label="名称" prop="name">
-                        <el-input v-model="dialog.classified.data.name" :disabled="dialog.classified.action==='update'?true:false"></el-input>
-                      </el-form-item>
-                      
-                      <!--el-form-item label="数据源">
-                          <el-input v-model="dialog.classified.datasource.class" disabled>
-                              <el-dropdown slot="prepend">
-                                  <span class="el-dropdown-link">
-                                      <i class="el-icon-coin el-icon--right" style="cursor:pointer;"></i>
-                                  </span>
-                                  <el-dropdown-menu slot="dropdown">
-                                      <ActionView :root="dialog.classified.datasource.root" 
-                                          @node-click="onDataSourceSelect"
-                                          @treedata-loaded="initDataSourceFields"></ActionView>
-                                  </el-dropdown-menu>
-                              </el-dropdown>
-                          </el-input>
-                      </el-form-item-->
-
-                      <el-form-item label="数据源">
-                          <el-input v-model="dialog.classified.datasource.class" disabled>
-                              <el-dropdown slot="prepend">
-                                  <span class="el-dropdown-link">
-                                      <i class="el-icon-coin el-icon--right" style="cursor:pointer;"></i>
-                                  </span>
-                                  <el-dropdown-menu slot="dropdown">
-                                      <DatasourceView :root="dialog.classified.datasource.root" 
-                                          @node-click="onDataSourceSelect"></DatasourceView>
-                                  </el-dropdown-menu>
-                              </el-dropdown>
-                          </el-input>
-                      </el-form-item>
-
-                      <!-- <el-form-item label="属性" v-if="dialog.classified.datasource">
-                          <DataFieldsView :fields="dialog.classified.datasource.data.fields" 
-                              @fields-change="onDataFieldsSelect"
-                              @node-click="onDataFieldsSelect"></DataFieldsView>
-                      </el-form-item> -->
-                      
-                      <el-form-item label="场景条件" prop="situation">
-                        <el-tabs value="base" type="border-card" @tab-click="onTabClick">
-                          <el-tab-pane label="基本" name="base">
-                              <props-view :fields="dialog.classified.datasource.data.fields" 
-                                @update-props="onUpdateProps"
-                                v-if="dialog.classified.datasource.data"></props-view>
-                          </el-tab-pane>
-                          <el-tab-pane label="高级" name="adv">
-                              <VueEditor
-                                  v-model="dialog.classified.data.situation"
-                                  @init="onEditorInit"
-                                  :lang="editor.lang.value"
-                                  :theme="editor.theme.value"
-                                  width="inherit"
-                                  height="calc(100vh - 450px)"
-                                  style="border:1px solid #f2f2f2;"
-                                  ref="editorRef"
-                              ></VueEditor>
-                          </el-tab-pane>
-                        </el-tabs>
-                        
-                      </el-form-item>
-
-                      <el-form-item label="状态" prop="status">
-                        <el-switch
-                          v-model="dialog.classified.data.status"
-                          active-color="#13ce66"
-                          inactive-color="#dddddd"
-                          :active-value="1"
-                          :inactive-value="0">>
-                        </el-switch>
-                      </el-form-item>
-                      
-                    </el-form>
-                    
-                    <span slot="footer" class="dialog-footer">
-                      <el-button @click="onClose">取 消</el-button>
-                      <el-button type="primary" @click="onSave">确 定</el-button>
-                    </span>
-                  </el-dialog>
             </SplitArea>
-            <SplitArea :size="80" :minSize="0" style="overflow:hidden;">
+            <SplitArea :size="100" :minSize="0" style="overflow:hidden;">
                 <el-container>
                   <el-header style="position: relative;height:40px;line-height:40px;">
                     <el-tooltip content="刷新">
@@ -111,6 +20,8 @@
                   </el-header>
                   <el-main>
                     <el-table
+                      v-loading="dt.loading"
+                      element-loading-spinner="el-icon-loading"
                       border
                       stripe
                       :data="dt.rows"
@@ -166,6 +77,77 @@
     <el-footer style="height:40px;line-height:40px;background:#f2f2f2;">
         {{ dt.info.join(' &nbsp; | &nbsp;') }}
     </el-footer>
+    <!-- 规则管理 -->
+    <el-dialog
+        title="规则管理"
+        :visible.sync="dialog.classified.show"
+        :append-to-body="true"
+        class="classified-dialog">
+        <el-form :model="dialog.classified.data"  :rules="dialog.classified.rules" ref="classifiedForm" label-width="100px">
+          
+
+          <el-form-item label="父节点" prop="parent">
+            <el-input v-model="dialog.classified.data.parent" disabled></el-input>
+          </el-form-item>
+
+          <el-form-item label="名称" prop="name">
+            <el-input v-model="dialog.classified.data.name" :disabled="dialog.classified.action==='update'?true:false"></el-input>
+          </el-form-item>
+          
+          <el-form-item label="数据源">
+              <el-input v-model="dialog.classified.datasource.class" disabled>
+                  <el-dropdown slot="prepend">
+                      <span class="el-dropdown-link">
+                          <i class="el-icon-coin el-icon--right" style="cursor:pointer;"></i>
+                      </span>
+                      <el-dropdown-menu slot="dropdown">
+                          <DatasourceView :root="dialog.classified.datasource.root" 
+                              @node-click="onDataSourceSelect"></DatasourceView>
+                      </el-dropdown-menu>
+                  </el-dropdown>
+              </el-input>
+          </el-form-item>
+          
+          <el-form-item label="场景条件" prop="situation">
+            <el-tabs v-model="dialog.activeTab" type="border-card" @tab-click="onTabClick" v-if="dialog.classified.show">
+              <el-tab-pane label="基本" name="base" >
+                  <props-view :fields="dialog.classified.datasource.data.fields" 
+                    @update-props="onUpdateProps"
+                    v-if="dialog.classified.datasource.data"></props-view>
+              </el-tab-pane>
+              <el-tab-pane label="高级" name="adv">
+                  <VueEditor
+                      v-model="dialog.classified.data.situation"
+                      @init="onEditorInit"
+                      :lang="editor.lang.value"
+                      :theme="editor.theme.value"
+                      width="inherit"
+                      height="calc(100vh - 450px)"
+                      style="border:1px solid #f2f2f2;"
+                      ref="editorRef"
+                  ></VueEditor>
+              </el-tab-pane>
+            </el-tabs>
+            
+          </el-form-item>
+
+          <el-form-item label="状态" prop="status">
+            <el-switch
+              v-model="dialog.classified.data.status"
+              active-color="#13ce66"
+              inactive-color="#dddddd"
+              :active-value="1"
+              :inactive-value="0">>
+            </el-switch>
+          </el-form-item>
+          
+        </el-form>
+        
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="onClose">取 消</el-button>
+          <el-button type="primary" @click="onSave">确 定</el-button>
+        </span>
+      </el-dialog>
   </el-container>
     
 </template>
@@ -196,6 +178,7 @@ export default {
         }
       },
       dt: {
+        loading: false,
         rows:[],
         columns: [],
         selected: [],
@@ -203,6 +186,7 @@ export default {
         info: []
       },
       dialog:{
+        activeTab:'base',
         classified:{
             show: false,
             datasource: {
@@ -258,8 +242,8 @@ export default {
                   
                   this.dt.info = [];
                   this.dt.info.push(`共 ${val.length} 项`);
-                  this.dt.info.push(`已选择 ${this.dt.selected.length} 项`);
-                  this.dt.info.push(this.moment().format("YYYY-MM-DD HH:mm:ss.SSS"));
+                  //this.dt.info.push(`已选择 ${this.dt.selected.length} 项`);
+                  this.dt.info.push(`操作时间： ${this.moment().format("YYYY-MM-DD HH:mm:ss.SSS")}`);
 
               }
           },
@@ -269,8 +253,8 @@ export default {
           handler(val){
               this.dt.info = [];
               this.dt.info.push(`共 ${this.dt.rows.length} 项`);
-              this.dt.info.push(`已选择 ${val.length} 项`);
-              this.dt.info.push(this.moment().format("YYYY-MM-DD HH:mm:ss.SSS"));
+              //this.dt.info.push(`已选择 ${val.length} 项`);
+              this.dt.info.push(`操作时间： ${this.moment().format("YYYY-MM-DD HH:mm:ss.SSS")}`);
           }
       }
   },
@@ -282,6 +266,7 @@ export default {
         return `row-${rowIndex}`;
     },
     initData(){
+      this.dt.loading = true;
       let param = encodeURIComponent( JSON.stringify({action:'list'}) );
       this.m3.callFS("/matrix/m3event/notify/situationAction.js",param).then(res=>{
         this.dt.rows = res.message.rows;
@@ -301,12 +286,20 @@ export default {
 
         });
 
+        this.$nextTick(()=>{
+          this.$refs.table.doLayout();
+        })
         setTimeout(()=>{
           this.$refs.table.doLayout();
-        },500)
+        },1000)
 
         let children = res.message.rows;
         this.tree.data = [{ id:"-1",parent:'/我的分类',name:'我的分类',children: children}];
+
+        this.dt.loading = false;
+      }).catch(err=>{
+        console.error(err);
+        this.dt.loading = false;
       })
     },
     onReset(){
@@ -324,9 +317,17 @@ export default {
       this.dialog.classified.show = true;
     },
     onEdit(index,row){
-      this.dialog.classified.show = true;
+      
       this.dialog.classified.data = row;
       this.dialog.classified.action = "update";
+
+      this.dialog.classified.show = true;
+
+      if(_.isNull(this.editor.value)){
+        this.dialog.activeTab = 'base';
+      }else{
+        this.dialog.activeTab = 'adv';
+      }
     },
     onDelete(index,item){
       console.log(index)
@@ -388,7 +389,7 @@ export default {
       this.m3.callFS("/matrix/m3event/notify/situationAction.js",param).then(()=>{
           
           this.$message({
-            type: "success",
+            type: row.status ? "success" : "info",
             message: row.status ? "场景已启用" : "场景已禁用"
           })
 
@@ -404,10 +405,6 @@ export default {
     onDataSourceSelect(data){
       this.dialog.classified.datasource.class = data.class;
       this.dialog.classified.datasource.data = data;
-
-      // let content = JSON.parse(this.dialog.classified.data.content);
-      // content.class = data.class;
-      // this.dialog.classified.data.content = JSON.stringify(content,null,2);
     },
     onDataFieldsSelect(data){
         this.dialog.classified.datasource.fields = data;

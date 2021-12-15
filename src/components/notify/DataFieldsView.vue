@@ -4,6 +4,7 @@
         :options="options"
         :props="props"
         collapse-tags
+        filterable
         clearable>
         <template slot-scope="{ node, data }">
             <span> {{ data.title}} </span>
