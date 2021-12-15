@@ -42,13 +42,20 @@
                     </div>
                     
                     <div style="display:flex;flex-wrap:wrap;" v-else-if="item.field === 'people' || item.field === 'emails' || item.field === 'phones'">
-                        <el-tag v-for="(v,k) in JSON.parse(scope.row[item.field])" :key="k" v-if="scope.row[item.field]" style="margin:2px;">
-                          {{v}}
-                        </el-tag>
+                        <el-popover
+                            width="550"
+                            trigger="click">
+                            <el-container>
+                                <el-main>
+                                    <el-input type="textarea" :value="JSON.parse(scope.row[item.field]).join('\n')" :rows="6" style="width:98%;white-space:nowrap;"></el-input>
+                                </el-main>
+                            </el-container>
+                            <el-button type="text" slot="reference">{{ JSON.parse(scope.row[item['field']]).length }} <i class="el-icon-user"></i></el-button>
+                        </el-popover>
                     </div>
 
                     <div style="height:30px;line-height:30px;" v-else-if="item.field === 'rtype'">
-                        <el-tag v-for="subItem in scope.row[item.field]" :key="subItem" v-if="scope.row[item.field]">{{subItem}}</el-tag>
+                        <el-tag v-for="subItem in scope.row[item.field]" :key="subItem" v-if="scope.row[item.field]" style="margin-left:5px;">{{subItem}}</el-tag>
                     </div>
                     
                     <div v-html='item.render(scope.row, scope.column, scope.row[item.field], scope.$index)' 
