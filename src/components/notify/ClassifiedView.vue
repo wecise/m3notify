@@ -64,7 +64,7 @@
                               inactive-color="#ff4949"
                               :active-value="1"
                               :inactive-value="0"
-                              style="padding-left:10px;"
+                              style="padding-left:10px;display:none;"
                               @change="onToggleStatus(scope.row)"></el-switch>
                         </template>
                       </el-table-column>
@@ -131,7 +131,7 @@
             
           </el-form-item>
 
-          <el-form-item label="状态" prop="status">
+          <el-form-item label="状态" prop="status" style="display:none;">
             <el-switch
               v-model="dialog.classified.data.status"
               active-color="#13ce66"
@@ -230,7 +230,7 @@ export default {
             this.initData();
           }else {
             this.dt.rows = this.dt.rows.filter(data => {
-                return !val || data.name.toLowerCase().includes(val.toLowerCase())
+                return !val || JSON.stringify(data).includes(val.toLowerCase())
             })
           }
         }

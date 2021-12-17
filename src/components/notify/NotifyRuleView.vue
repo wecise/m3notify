@@ -50,7 +50,7 @@
                                     <el-input type="textarea" :value="JSON.parse(scope.row[item.field]).join('\n')" :rows="6" style="width:98%;white-space:nowrap;"></el-input>
                                 </el-main>
                             </el-container>
-                            <el-button type="text" slot="reference">{{ JSON.parse(scope.row[item['field']]).length }} <i class="el-icon-user"></i></el-button>
+                            <el-button type="text" slot="reference"><i class="el-icon-user"></i> {{ scope.row[item['field']] | pickPeople }}</el-button>
                         </el-popover>
                     </div>
 
@@ -147,10 +147,10 @@
             </el-select>
           </el-form-item>
           <el-form-item label="通知模版" prop="template">
-            <el-select v-model="dialog.rule.new.data.template" value-key="fullname" filterable placeholder="请选择">
+            <el-select v-model="dialog.rule.new.data.template" value-key="name" filterable placeholder="请选择">
               <el-option
                 v-for="item in templates.list"
-                :key="item.fullname"
+                :key="item.name"
                 :label="item.title"
                 :value="item">
                 <span style="float: left">{{ item.name | formatName }}</span>
@@ -366,6 +366,16 @@ export default {
     };
   },
   filters:{
+    pickPeople(val){
+      try{
+        return JSON.parse(val).map(v=>{
+          return v.split(",")[0]}
+        ).sort().join(" ")
+      }catch(err){
+        console.error(err);
+        return null;
+      }
+    },
     formatName(val){
       return val.replace(/.json/,'');
     },
@@ -386,12 +396,17 @@ export default {
           this.initData();
         }else {
           this.dt.rows = this.dt.rows.filter(data => {
-              return !val || data.name.toLowerCase().includes(val.toLowerCase()) || data.emails.includes(val.toLowerCase()) || data.phones.includes(val.toLowerCase())
+              return !val || JSON.stringify(data).includes(val.toLowerCase());
           })
         }
       }
     },
-    'dialog.rule.show'(val){
+    'dialog.rule.new.show'(val){
+        if(val){
+          this.init();
+        }
+    },
+    'dialog.rule.edit.show'(val){
         if(val){
           this.init();
         }
@@ -476,14 +491,14 @@ export default {
       })
 
       this.m3.callFS("/matrix/m3event/notify/getTemplateList.js").then(rtn=>{
-        this.templates.list = _.map(rtn.message.rows,v=>{
+        this.templates.list = _.orderBy(_.map(rtn.message.rows,v=>{
           return {name:v.name, value: {[v.name]:v.fullname}, title: v.name.replace(/.json/,'')};
-        });
+        }),['title'],['asc']);
       })
 
       let param = encodeURIComponent( JSON.stringify({action:'list'}) );
       this.m3.callFS("/matrix/m3event/notify/situationAction.js",param).then(rtn=>{
-        this.situation.list = rtn.message.rows;
+        this.situation.list = _.orderBy(rtn.message.rows,['name'],['asc']);
         this.dt.loading = false;
       }).catch(err=>{
         console.error(err);

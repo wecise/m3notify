@@ -30,6 +30,30 @@
                                 <div v-if="item.field==='sendstatus' || item.field==='content'">
                                     <el-input type="textarea" :rows="4" :value="renderContent(scope.row[item.field])"></el-input>
                                 </div>
+                                <div style="display:flex;flex-wrap:wrap;" v-else-if="item.field === 'people'">
+                                    <el-popover
+                                        width="550"
+                                        trigger="click">
+                                        <el-container>
+                                            <el-main>
+                                                <el-input type="textarea" :value="scope.row[item.field].join('\n')" :rows="6" style="width:98%;white-space:nowrap;"></el-input>
+                                            </el-main>
+                                        </el-container>
+                                        <el-button type="text" slot="reference"><i class="el-icon-user"></i> {{ scope.row[item['field']] | pickPeople }}</el-button>
+                                    </el-popover>
+                                </div>
+                                <div style="display:flex;flex-wrap:wrap;" v-else-if="item.field === 'msg'">
+                                    <el-popover
+                                        width="550"
+                                        trigger="click">
+                                        <el-container>
+                                            <el-main>
+                                                <el-input type="textarea" :value="scope.row[item.field]" :rows="6" style="width:98%;white-space:nowrap;"></el-input>
+                                            </el-main>
+                                        </el-container>
+                                        <el-button type="text" slot="reference">{{ scope.row[item['field']] }} <i class="el-icon-user"></i></el-button>
+                                    </el-popover>
+                                </div>
                                 <div v-else>
                                     {{scope.row[item.field]}}
                                 </div>
@@ -37,13 +61,24 @@
                         </template>
                     </el-table-column>
                 </template>
-                <el-table-column label="操作" width="260" fixed="right">
+                <el-table-column label="操作" width="120" fixed="right">
                     <template slot="header" slot-scope="scope">
                         <el-input v-model="dt.filter" clearable placeholder="关键字"></el-input>
                     </template>
                     <template slot-scope="scope">
-                        <!-- <el-button type="text" @click="onLookLog(scope.row)"><i class="el-icon-document-copy"></i> 发送日志</el-button> -->
-                        <el-button type="text" @click="onLookContent(scope.row)"><i class="el-icon-tickets"></i>  查看详情</el-button>
+                        <el-popover
+                            width="300"
+                            trigger="click">
+                            <el-container>
+                                <el-main>
+                                    <el-input type="textarea" :value="scope.row['sendstatus']['msg']" :rows="6" style="width:98%;white-space:nowrap;"></el-input>
+                                </el-main>
+                            </el-container>
+                            <el-button slot="reference" :type="scope.row['sendstatus']['status']==='ok'?'success':'danger'">
+                                {{scope.row['sendstatus']==='ok'?'发送成功':'发送失败'}}
+                            </el-button>
+                        </el-popover>
+                        <!--el-button type="text" @click="onLookContent(scope.row)"><i class="el-icon-tickets"></i>  查看详情</el-button-->
                         <!-- <el-button type="text" @click="onDelete(scope.$index, scope.row)"> 删除</el-button> -->
                     </template>
                 </el-table-column>
@@ -180,6 +215,18 @@
                 }
             }
         },
+        filters:{
+            pickPeople(val){
+                try{
+                    return val.map(v=>{
+                    return v.split(",")[0]}
+                    ).sort().join(" ")
+                }catch(err){
+                    console.error(err);
+                    return null;
+                }
+            }
+        },
         created(){
             this.initData();
         },
@@ -212,7 +259,7 @@
                         this.initData();
                     }else {
                         this.dt.rows = this.dt.rows.filter(data => {
-                            return !val || window.atob(data.sendstatus).includes(val) || window.atob(data.content).includes(val) || data.name.includes(val)
+                            return !val || JSON.stringify(data).includes(val.toLowerCase())
                         })
                     }
                 }
