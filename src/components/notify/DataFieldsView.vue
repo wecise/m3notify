@@ -5,10 +5,15 @@
         :props="props"
         collapse-tags
         filterable
-        clearable>
+        clearable
+        popper-class="fieldsCascader">
         <template slot-scope="{ node, data }">
             <span> {{ data.title}} </span>
-            <span style="float:right;font-size:10px;color:#999999;"> {{ data.ftype}} </span>
+            <span style="float:right;font-size:10px;color:#999999;"> 
+                <span>
+                    {{ data.name}} | {{ data.ftype}} 
+                </span>
+            </span>
         </template>    
     </el-cascader>
 </template>
@@ -55,6 +60,11 @@ export default {
     }
 }
 </script>
-<style scoped>
+<style>
+
+    .fieldsCascader .el-cascader-menu__wrap {
+        height: 50vh;
+        width: 40vw;
+    }
 
 </style>

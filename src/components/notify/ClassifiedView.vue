@@ -82,6 +82,8 @@
         title="规则管理"
         :visible.sync="dialog.classified.show"
         :append-to-body="true"
+        :close-on-press-escape="false"
+        :close-on-click-modal="false"
         class="classified-dialog">
         <el-form :model="dialog.classified.data"  :rules="dialog.classified.rules" ref="classifiedForm" label-width="100px">
           
@@ -122,7 +124,7 @@
                       :lang="editor.lang.value"
                       :theme="editor.theme.value"
                       width="inherit"
-                      height="calc(100vh - 450px)"
+                      height="30vh"
                       style="border:1px solid #f2f2f2;"
                       ref="editorRef"
                   ></VueEditor>

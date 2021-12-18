@@ -178,6 +178,8 @@
         title="策略管理"
         :visible.sync="dialog.rule.edit.show"
         :append-to-body="true"
+        :close-on-press-escape="false"
+        :close-on-click-modal="false"
         class="notifyRule-dialog"
         @open="onOpen"
         v-if="dialog.rule.edit.show">

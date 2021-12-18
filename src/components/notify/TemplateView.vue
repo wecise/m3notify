@@ -7,12 +7,6 @@
       <el-tooltip content="新建模板">
         <el-button type="text" icon="el-icon-plus" @click="onNew"></el-button>
       </el-tooltip>
-      <!--el-tooltip content="导出模板">
-        <el-button type="text" icon="el-icon-upload2"></el-button>
-      </el-tooltip>
-      <el-tooltip content="导入模板">
-        <el-button type="text" icon="el-icon-download"></el-button>
-      </el-tooltip-->
     </el-header>
     <el-main>
       <el-table
@@ -72,119 +66,122 @@
         style="height: auto;"
         :visible.sync="dialog.new.show"
         :append-to-body="true"
-        :show-close="false"
         :close-on-press-escape="false"
         :close-on-click-modal="false"
         :destroy-on-close="true"
         @close="onReset('newTemplateForm')"
         v-if="dialog.new.show">
-          <div style="display:flex;flex-wrap:nowrap;height:auto;padding:20px;background:#f2f2f2;">
-            <el-form :model="dialog.new.data" :rules="dialog.new.rules" 
-              ref="newTemplateForm" label-width="100px"
-              style="width:65%;">
-              
-              <el-form-item label="名称" prop="name">
-                <el-input v-model="dialog.new.data.name"></el-input>
-              </el-form-item>
-
-              <el-form-item label="数据源">
-                  <el-input v-model="dialog.template.datasource.class" disabled >
-                      <el-dropdown slot="prepend">
-                          <span class="el-dropdown-link">
-                              <i class="el-icon-coin el-icon--right" style="cursor:pointer;"></i>
-                          </span>
-                          <el-dropdown-menu slot="dropdown">
-                              <DatasourceView :root="dialog.template.datasource.root" 
-                                  @node-click="onDataSourceSelect($event,'new')"></DatasourceView>
-                          </el-dropdown-menu>
-                      </el-dropdown>
-                  </el-input>
-                  <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择数据源</span>
-              </el-form-item>
-
-              <template v-if="dialog.new.data.content.class">
+          <el-container>
+            <el-main style="display: flex;flex-wrap: nowrap;background: #f2f2f2;">
+              <el-form :model="dialog.new.data" :rules="dialog.new.rules" 
+                ref="newTemplateForm" label-width="100px"
+                :style="newTemplatePriview.length>0 ? 'width:70%;':'width:100%;'">
                 
-                <el-form-item label="属性">
-                    <DataFieldsView :fields="dialog.template.datasource.fields" 
-                        @fields-change="onDataFieldsSelect($event,'new')"
-                        @node-click="onDataFieldsSelect($event,'new')"
-                        style="width:50%"></DataFieldsView>
-                        <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成通知模版</span>
+                <el-form-item label="名称" prop="name">
+                  <el-input v-model="dialog.new.data.name"></el-input>
                 </el-form-item>
-                
-                <el-form-item label="开启抑制策略">
-                  <el-switch v-model="dialog.new.data.content.compression.enable"
-                    active-color="#13ce66"
-                    :active-value="true"
-                    :inactive-value="false"></el-switch>
-                    <div v-if="dialog.new.data.content.compression.enable">
+
+                <el-form-item label="数据源">
+                    <el-input v-model="dialog.template.datasource.class" disabled >
+                        <el-dropdown slot="prepend">
+                            <span class="el-dropdown-link">
+                                <i class="el-icon-coin el-icon--right" style="cursor:pointer;"></i>
+                            </span>
+                            <el-dropdown-menu slot="dropdown">
+                                <DatasourceView :root="dialog.template.datasource.root" 
+                                    @node-click="onDataSourceSelect($event,'new')"></DatasourceView>
+                            </el-dropdown-menu>
+                        </el-dropdown>
+                    </el-input>
+                    <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择数据源</span>
+                </el-form-item>
+
+                <template v-if="dialog.new.data.content.class">
+                  
+                  <el-form-item label="属性">
                       <DataFieldsView :fields="dialog.template.datasource.fields" 
-                            @fields-change="onCompressionFieldsSelect($event,'new')"
-                            @node-click="onCompressionFieldsSelect($event,'new')"
-                            style="width:50%"></DataFieldsView>
-                            <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成抑制主键</span>
-                      <p>
-                        <el-input-number v-model="dialog.new.data.content.compression.timer" :min="0"></el-input-number>
-                        <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 抑制时间窗口(单位：秒)</span>
-                      </p>
-                    </div>
-                </el-form-item>
-                <el-form-item label="HTML支持" prop="content">
-                    <el-switch v-model="dialog.new.data.content.html"
+                          @fields-change="onDataFieldsSelect($event,'new')"
+                          @node-click="onDataFieldsSelect($event,'new')"
+                          style="width:50%"></DataFieldsView>
+                          <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成通知模版</span>
+                  </el-form-item>
+                  
+                  <el-form-item label="开启抑制策略">
+                    <el-switch v-model="dialog.new.data.content.compression.enable"
                       active-color="#13ce66"
                       :active-value="true"
                       :inactive-value="false"></el-switch>
-                </el-form-item>
+                      <div v-if="dialog.new.data.content.compression.enable">
+                        <DataFieldsView :fields="dialog.template.datasource.fields" 
+                              @fields-change="onCompressionFieldsSelect($event,'new')"
+                              @node-click="onCompressionFieldsSelect($event,'new')"
+                              style="width:50%"></DataFieldsView>
+                              <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成抑制主键</span>
+                        <p>
+                          <el-input-number v-model="dialog.new.data.content.compression.timer" :min="0"></el-input-number>
+                          <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 抑制时间窗口(单位：秒)</span>
+                        </p>
+                      </div>
+                  </el-form-item>
+                  <el-form-item label="HTML支持" prop="content">
+                      <el-switch v-model="dialog.new.data.content.html"
+                        active-color="#13ce66"
+                        :active-value="true"
+                        :inactive-value="false"></el-switch>
+                  </el-form-item>
 
-                <el-form-item>
-                  <span>
-                      <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 可自行调整添加常量属性</span>
-                      <VueEditor
-                          v-model="dialog.new.data.source"
-                          @init="onEditorInit"
-                          :lang="editor.lang.value"
-                          :theme="editor.theme.value"
-                          width="100%"
-                          height="calc(100vh - 560px)"
-                          style="box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);border: 3px solid #dddddd;border-radius: 15px;"
-                          ref="editorRef"
-                      ></VueEditor>
-                    </span>
-                </el-form-item>
-              </template>
-              
-              <el-form-item label="是否启用" prop="status" style="display:none;">
-                <el-switch
-                  v-model="dialog.new.data.attr.status"
-                  active-color="#13ce66"
-                  inactive-color="#dddddd"
-                  active-value="1"
-                  inactive-value="0">>
-                </el-switch>
-              </el-form-item>
-              
-            </el-form>
-            <div style="width:35%;margin-top:-70px;">
+                  <el-form-item label="自定义模版" style="display:none;">
+                    <span>
+                        <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 可自行调整添加常量属性</span>
+                        <VueEditor
+                            v-model="dialog.new.data.source"
+                            @init="onEditorInit('newEditorRef','new')"
+                            :lang="editor.lang.value"
+                            :theme="editor.theme.value"
+                            width="100%"
+                            height="calc(100vh - 560px)"
+                            style="border: 1px solid #dddddd;border-radius: 15px;"
+                            ref="newEditorRef"
+                        ></VueEditor>
+                      </span>
+                  </el-form-item>
+                </template>
                 
-                <div class="iphone">
-                  <div class="iphone-top">
-                    <span class="camera"></span>
-                    <span class="sensor"></span>
-                    <span class="speaker"></span>
-                  </div>
-                  <div class="iphone-screen">
-                    <div v-html="newTemplatePriview" style="padding: 10px;overflow-y: auto;"></div>
-                  </div>
-                  <div class="iphone-bottom">
-                    <span></span>
-                  </div>
+                <el-form-item label="是否启用" prop="status" style="display:none;">
+                  <el-switch
+                    v-model="dialog.new.data.attr.status"
+                    active-color="#13ce66"
+                    inactive-color="#dddddd"
+                    active-value="1"
+                    inactive-value="0">>
+                  </el-switch>
+                </el-form-item>
+                
+              </el-form>
+              <transition name="fade">
+                <div :style="newTemplatePriview?'width:30%;display:;':'display:none;'">
+                    
+                    <div class="iphone">
+                      <div class="iphone-top">
+                        <span class="camera"></span>
+                        <span class="sensor"></span>
+                        <span class="speaker"></span>
+                      </div>
+                      <div class="iphone-screen">
+                        <div v-html="newTemplatePriview" contenteditable="true" style="padding: 10px;overflow-y: auto;" ref="newTemplatePriviewRef"></div>
+                      </div>
+                      <div class="iphone-bottom">
+                        <span></span>
+                      </div>
+                    </div>
                 </div>
-            </div>
-          </div>
+              </transition>
+            </el-main>
+          </el-container>
           
         <span slot="footer" class="dialog-footer">
-          <el-button @click="dialog.new.show = false">取 消</el-button>
-          <el-button @click="onReset('newTemplateForm')">重置</el-button>
+          <el-button @click="dialog.new.show = false">关 闭</el-button>
+          <!-- <el-button @click="onReset('newTemplateForm')">重置</el-button> -->
           <el-button type="primary" @click="onSave" :loading="dialog.new.loading">确 定</el-button>
         </span>
       </el-dialog>
@@ -195,121 +192,122 @@
         style="height: auto;"
         :visible.sync="dialog.edit.show"
         :append-to-body="true"
-        :show-close="false"
         :close-on-press-escape="false"
         :close-on-click-modal="false"
         :destroy-on-close="true"
         v-if="dialog.edit.show">
-        <div style="display:flex;flex-wrap:nowrap;height:auto;padding:20px;background:#f2f2f2;">
-          <el-form :model="dialog.edit.data" :rules="dialog.edit.rules" 
-            ref="editTemplateForm" label-width="100px"
-            style="width:70%;"
-            v-if="dialog.edit.data.content">
-            
-            <el-form-item label="名称" prop="name">
-              <el-input v-model="dialog.edit.data.name" disabled></el-input>
-            </el-form-item>
-
-            <el-form-item label="数据源">
-                <el-input v-model="dialog.template.datasource.class" disabled style="width:50%">
-                    <el-dropdown slot="prepend">
-                        <span class="el-dropdown-link">
-                            <i class="el-icon-coin el-icon--right" style="cursor:pointer;"></i>
-                        </span>
-                        <el-dropdown-menu slot="dropdown">
-                            <DatasourceView ref="datasourceEditRef"
-                                :root="dialog.template.datasource.root" 
-                                @node-click="onDataSourceSelect($event,'edit')"></DatasourceView>
-                        </el-dropdown-menu>
-                    </el-dropdown>
-                </el-input>
-                <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择数据源</span>
-            </el-form-item>
-
-            <el-form-item label="属性" v-if="dialog.template.datasource.class">
-              
-                <DataFieldsView :fields="dialog.template.datasource.fields"
-                    @fields-change="onDataFieldsSelect($event,'edit')"
-                    @node-click="onDataFieldsSelect($event,'edit')"
-                    :selected="dialog.edit.data.content.fields"
-                    style="width:50%"></DataFieldsView>
-                  <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成通知模版</span>
-            </el-form-item>
-            <el-form-item label="开启抑制策略" v-if="dialog.template.datasource.class">
-              <el-switch v-model="dialog.edit.data.content.compression.enable"
-                    active-color="#13ce66"
-                    :active-value="true"
-                    :inactive-value="false"></el-switch>
-              <div v-if="dialog.edit.data.content.compression.enable">
-                <DataFieldsView :fields="dialog.template.datasource.fields" 
-                      @fields-change="onCompressionFieldsSelect($event,'edit')"
-                      @node-click="onCompressionFieldsSelect($event,'edit')"
-                      :selected="dialog.edit.data.content.compression.keys"
-                      style="width:50%"></DataFieldsView>
-                      <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成抑制主键</span>
-                <p>
-                  <el-input-number v-model="dialog.edit.data.content.compression.timer" :min="0"></el-input-number>
-                  <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 抑制时间窗口(单位：秒)</span>
-                </p>
-              </div>
-            </el-form-item>
-
-            <el-form-item label="HTML支持" prop="content">
-                <el-switch v-model="dialog.edit.data.content.html"
-                  active-color="#13ce66"
-                  :active-value="true"
-                  :inactive-value="false"></el-switch>
-            </el-form-item>
-            
-            <el-form-item>
-              <span>
-                <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 可自行调整添加常量属性</span>
-                <VueEditor
-                    v-model="dialog.edit.data.source"
-                    @init="onEditorInit"
-                    :lang="editor.lang.value"
-                    :theme="editor.theme.value"
-                    width="100%"
-                    height="calc(100vh - 525px)"
-                    style="box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);border: 3px solid #dddddd;border-radius: 15px;"
-                    ref="editorRef"
-                ></VueEditor>
-              </span>
-            </el-form-item>
-
-             <el-form-item label="是否启用" prop="status">
-              
-              <el-switch
-                v-model="dialog.edit.data.attr.status"
-                active-color="#13ce66"
-                inactive-color="#dddddd"
-                active-value="1"
-                inactive-value="0">>
-              </el-switch>
-            </el-form-item>
-
-          </el-form>
-
-          <div style="width:30%;margin-top:-70px;">
+        <el-container>
+            <el-main style="display: flex;flex-wrap: nowrap;background: #f2f2f2;">
+              <el-form :model="dialog.edit.data" :rules="dialog.edit.rules" 
+                ref="editTemplateForm" label-width="100px"
+                :style="editTemplatePriview ? 'width:70%;padding:20px;' : 'width:100%;padding:20px;'"
+                v-if="dialog.edit.data.content">
                 
-                <div class="iphone">
-                  <div class="iphone-top">
-                    <span class="camera"></span>
-                    <span class="sensor"></span>
-                    <span class="speaker"></span>
-                  </div>
-                  <div class="iphone-screen">
-                    <div v-html="editTemplatePriview" style="padding: 10px;overflow-y: auto;"></div>
-                  </div>
-                  <div class="iphone-bottom">
-                    <span></span>
-                  </div>
-                </div>
-          </div>
+                <el-form-item label="名称" prop="name">
+                  <el-input v-model="dialog.edit.data.name" disabled></el-input>
+                </el-form-item>
 
-        </div>
+                <el-form-item label="数据源">
+                    <el-input v-model="dialog.template.datasource.class" disabled style="width:50%">
+                        <el-dropdown slot="prepend">
+                            <span class="el-dropdown-link">
+                                <i class="el-icon-coin el-icon--right" style="cursor:pointer;"></i>
+                            </span>
+                            <el-dropdown-menu slot="dropdown">
+                                <DatasourceView ref="datasourceEditRef"
+                                    :root="dialog.template.datasource.root" 
+                                    @node-click="onDataSourceSelect($event,'edit')"></DatasourceView>
+                            </el-dropdown-menu>
+                        </el-dropdown>
+                    </el-input>
+                    <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择数据源</span>
+                </el-form-item>
+
+                <el-form-item label="属性" v-if="dialog.template.datasource.class">
+                    <DataFieldsView :fields="dialog.template.datasource.fields"
+                        @fields-change="onDataFieldsSelect($event,'edit')"
+                        @node-click="onDataFieldsSelect($event,'edit')"
+                        :selected="dialog.edit.data.content.fields"
+                        style="width:50%"></DataFieldsView>
+                      <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成通知模版</span>
+                </el-form-item>
+                <el-form-item label="开启抑制策略" v-if="dialog.template.datasource.class">
+                  <el-switch v-model="dialog.edit.data.content.compression.enable"
+                        active-color="#13ce66"
+                        :active-value="true"
+                        :inactive-value="false"></el-switch>
+                  <div v-if="dialog.edit.data.content.compression.enable">
+                    <DataFieldsView :fields="dialog.template.datasource.fields" 
+                          @fields-change="onCompressionFieldsSelect($event,'edit')"
+                          @node-click="onCompressionFieldsSelect($event,'edit')"
+                          :selected="dialog.edit.data.content.compression.keys"
+                          style="width:50%"></DataFieldsView>
+                          <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成抑制主键</span>
+                    <p>
+                      <el-input-number v-model="dialog.edit.data.content.compression.timer" :min="0"></el-input-number>
+                      <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 抑制时间窗口(单位：秒)</span>
+                    </p>
+                  </div>
+                </el-form-item>
+
+                <el-form-item label="HTML支持" prop="content">
+                    <el-switch v-model="dialog.edit.data.content.html"
+                      active-color="#13ce66"
+                      :active-value="true"
+                      :inactive-value="false"></el-switch>
+                </el-form-item>
+                
+                <el-form-item label="自定义模版">
+                  <span>
+                    <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 可自行调整添加常量属性</span>
+                    <VueEditor
+                        v-model="dialog.edit.data.source"
+                        @init="onEditorInit('editorRef','edit')"
+                        :lang="editor.lang.value"
+                        :theme="editor.theme.value"
+                        width="100%"
+                        height="calc(100vh - 525px)"
+                        style="box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);border: 3px solid #dddddd;border-radius: 15px;display:none;"
+                        ref="editorRef"
+                    ></VueEditor>
+                  </span>
+                </el-form-item>
+
+                <el-form-item label="是否启用" prop="status" style="display:none;">
+                  
+                  <el-switch
+                    v-model="dialog.edit.data.attr.status"
+                    active-color="#13ce66"
+                    inactive-color="#dddddd"
+                    active-value="1"
+                    inactive-value="0">>
+                  </el-switch>
+                </el-form-item>
+
+              </el-form>
+
+              <transition name="fade">
+                <div :style="editTemplatePriview?'width:30%;display:;':'width:0%;display:none;'">
+                      
+                      <div class="iphone">
+                        <div class="iphone-top">
+                          <span class="camera"></span>
+                          <span class="sensor"></span>
+                          <span class="speaker"></span>
+                        </div>
+                        <div class="iphone-screen">
+                          <div v-html="editTemplatePriview" style="padding: 10px;overflow-y: auto;"></div>
+                        </div>
+                        <div class="iphone-bottom">
+                          <span></span>
+                        </div>
+                      </div>
+                </div>
+              </transition>
+            </el-main>
+        </el-container>
         <span slot="footer" class="dialog-footer">
-          <el-button @click="dialog.edit.show = false">取 消</el-button>
+          <el-button @click="dialog.edit.show = false">关 闭</el-button>
           <el-button type="primary" @click="onUpdate" :loading="dialog.edit.loading">确 定</el-button>
         </span>
       </el-dialog>
@@ -484,7 +482,8 @@ export default {
         let content = this.genTemplateByFields(val);
         this.dialog.new.data.source = JSON.stringify(content,null,2);
       },
-      deep: true
+      deep: true,
+      immediate: true
     },
     'dialog.edit.data.content':{
       handler(val){
@@ -542,6 +541,7 @@ export default {
   },
   methods: {
     genTemplateByFields(data){
+      
       // 根据fields的name找出title，生产模版用做title显示用
       if(_.isEmpty(data.fields)){
         data.template = "";
@@ -549,16 +549,20 @@ export default {
           data.template = data.fields.map(v=>{
                                 let field = _.find(this.dialog.template.datasource.fields,{name:v});
                                 let title = v.toUpperCase();
+                                let value = v;
                                 if(field){
                                   title = field.title;
+                                  value = ['date','timestamp'].includes(field.ftype) ? `${v}.Format "2006-01-02 15:04:05"` : v;
                                 }
+
                                 if(data.html){
-                                  return `<p>${title}：{{.${v}}}</p>`
+                                  return `<p>${title}：{{.${value}}}</p>`
                                 }else{
-                                  return `${title}：{{.${v}}} `
+                                  return `${title}：{{.${value}}} `
                                 }
                             }).join("");
       }
+      
       return data;
     },
     onLayout(){
@@ -566,19 +570,15 @@ export default {
           this.$refs.table.doLayout();
       })
     },
-    initEditor(){
-        let editor = this.$refs.editorRef.editor;
-        
-        editor.on('mousemove', ()=> {
-            editor.resize();
-        });
+    initEditor(ref,ac){
+      let editor = this.$refs[ref].editor;  
     },
-    onEditorInit(){
+    onEditorInit(ref,ac){
         require("brace/ext/language_tools"); //language extension prerequsite...
         require(`brace/mode/${this.editor.lang.value}`); //language
         require(`brace/snippets/${this.editor.lang.value}`); //snippet
         require(`brace/theme/${this.editor.theme.value}`); //language
-        this.initEditor();
+        this.initEditor(ref,ac);
     },
     rowClassName({rowIndex}){
         return `row-${rowIndex}`;
@@ -645,10 +645,13 @@ export default {
       }
 
       this.dialog.new.loading = true;
+
+      let content = _.clone(this.dialog.new.data.content);
+      content.template = this.$refs.newTemplatePriviewRef.textContent;
       
       let param = {
                     parent: this.dialog.new.data.parent, name: [this.dialog.new.data.name,this.dialog.new.data.ftype].join(".").replace(/.json.json/,'.json'), 
-                    data: {content: JSON.stringify(this.dialog.new.data.content,null,2), ftype: this.dialog.new.data.ftype, attr: this.dialog.new.data.attr, index: true}    
+                    data: {content: JSON.stringify(content,null,2), ftype: this.dialog.new.data.ftype, attr: this.dialog.new.data.attr, index: true}    
                   };
       this.m3.dfs.newFile(param).then((res)=>{
         
@@ -720,7 +723,6 @@ export default {
       let content = JSON.parse(item.content);
       
       this.$set(this.dialog.edit.data,'content',content);
-      console.log(item,this.dialog.edit.data)
       this.dialog.template.datasource.class = content.class;
       
       setTimeout(()=>{
@@ -776,6 +778,7 @@ export default {
       position: relative;
       -webkit-transform: scale(0.8);
       transform: scale(0.8);
+      font-size:16px;
   }
   .iphone-top {
       padding: 5px 110px 40px;
@@ -855,5 +858,12 @@ export default {
       position: absolute;
       left: 4px;
       top: 4px;
+  }
+
+  .fade-enter-active, .fade-leave-active {
+    transition: opacity .5s;
+  }
+  .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+    opacity: 0;
   }
 </style>

@@ -65,7 +65,7 @@
                     <template slot="header" slot-scope="scope">
                         <el-input v-model="dt.filter" clearable placeholder="关键字"></el-input>
                     </template>
-                    <template slot-scope="scope">
+                    <template slot-scope="scope" >
                         <el-popover
                             width="300"
                             trigger="click">
@@ -74,7 +74,7 @@
                                     <el-input type="textarea" :value="scope.row['sendstatus']['msg']" :rows="6" style="width:98%;white-space:nowrap;"></el-input>
                                 </el-main>
                             </el-container>
-                            <el-button slot="reference" :type="scope.row['sendstatus']['status']==='ok'?'success':'danger'">
+                            <el-button slot="reference" :type="scope.row['sendstatus']['status']==='ok'?'success':'danger'" style="display:none;">
                                 {{scope.row['sendstatus']==='ok'?'发送成功':'发送失败'}}
                             </el-button>
                         </el-popover>

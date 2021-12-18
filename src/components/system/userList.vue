@@ -117,6 +117,7 @@
                 v-if="dialog.user.show">
                 <el-container>
                     <el-main>
+                        {{dialog.user.row}}
                         <el-form label-width="80px">
 
                             <el-form-item label="组名称" required>
@@ -277,14 +278,16 @@
                     if(_.isEmpty(val)){
                         this.initData();
                     } else {
-                        this.dt.rows = this.dt.rows.filter(data => !val || data.name.toLowerCase().includes(val.toLowerCase()));
+                        this.dt.rows = this.dt.rows.filter(data => {
+                            return !val || JSON.stringify(data).includes(val.toLowerCase())
+                        })
                     }
                 }
             }
         },
         methods: {
             onRefresh(){
-                this.$emit("REFRESH-LDAP-LIST");
+                this.$emit("refresh-ldap");
             },
             initData(){
                 _.extend(this.dt, {columns: _.map(this.model.columns, (v)=>{
@@ -365,7 +368,8 @@
                             this.m3.callFS("/matrix/m3system/clearRoleGroupInstAfterDeleteRoleGroup.js",encodeURIComponent(data.fullname));
 
                             // 更新Ldap树
-                            this.$emit("ldap-refresh");
+                            this.$emit("refresh-ldap");
+
                             // 更新Table
                             this.dt.rows.splice(index, 1);
                             
@@ -410,7 +414,9 @@
                                 message: "更新组成功"
                             })
 
+                            // 更新Ldap树
                             this.$emit("refresh-ldap");
+
                             this.dialog.user.row.id = res.message; // 返回新的用户id
                             this.dialog.user.row.parent = newGroup.fullname;
                             
@@ -513,7 +519,7 @@
                     cancelButtonText: '取消',
                     type: 'warning'
                 }).then(() => {
-
+                    
                     this.m3.user.update(row).then( rtn=>{
                         
                         if(rtn.status === 'ok'){
@@ -529,6 +535,11 @@
                             this.dialog.user.show = false;
 
                         }
+                    }).catch(err=>{
+                        this.$message({
+                            type: "error",
+                            message: `更新用户: ${row.username} 失败 ` + err
+                        })
                     });
                     
                 }).catch(err => {

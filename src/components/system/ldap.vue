@@ -2,13 +2,13 @@
     <el-container>
         <el-header style="height:40px;line-height:40px;text-align:right;display:flex;">
             
-            <div>
+            <div style="display:none;">
                 <el-input v-model="filterText" placeholder="关键字" style="width:100%;" clearable>
                     <el-button slot="append" type="primary" icon="el-icon-search"></el-button>
                 </el-input>
             </div>
             
-           <span style="float:right;width:100px;">
+           <span style="float:right;width:100%;">
                 <el-tooltip content="新建组织">
                     <el-button type="text" icon="el-icon-office-building" @click="onNewGroup({'fullname':'/'})"></el-button>
                 </el-tooltip>
