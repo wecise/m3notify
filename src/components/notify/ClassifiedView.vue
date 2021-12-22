@@ -335,7 +335,7 @@ export default {
         },1000)
 
         let children = res.message.rows;
-        this.tree.data = [{ id:"-1",parent:'/我的分类',name:'我的分类',children: children}];
+        this.tree.data = [{ id:"-1",parent:'/通知规则',name:'通知规则',children: children}];
 
         this.dt.loading = false;
       }).catch(err=>{
@@ -374,7 +374,7 @@ export default {
     },
     onDelete(index,item){
       
-      this.$confirm(`确认要删除该分类：${item.name}？`, '提示', {
+      this.$confirm(`确认要删除该通知规则：${item.name}？`, '提示', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'error'
