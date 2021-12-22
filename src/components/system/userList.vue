@@ -117,7 +117,6 @@
                 v-if="dialog.user.show">
                 <el-container>
                     <el-main>
-                        {{dialog.user.row}}
                         <el-form label-width="80px">
 
                             <el-form-item label="组名称" required>
@@ -279,7 +278,7 @@
                         this.initData();
                     } else {
                         this.dt.rows = this.dt.rows.filter(data => {
-                            return !val || JSON.stringify(data).includes(val.toLowerCase())
+                            return !val || JSON.stringify(data).includes(val) || JSON.stringify(data).toLowerCase().includes(val)
                         })
                     }
                 }

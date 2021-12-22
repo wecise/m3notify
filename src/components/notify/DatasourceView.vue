@@ -35,7 +35,8 @@ import _ from 'lodash';
 export default {
     name:'DatasourceView',
     props: {
-        root: String
+        root: String,
+        defaultClass: String
     },
     data(){
         return {
@@ -64,7 +65,27 @@ export default {
             this.m3.callFS("/matrix/entity/entity_class.js",encodeURIComponent(this.root)).then( (rtn)=>{
                 this.treeData = rtn.message;
                 this.$emit("treedata-loaded",this.treeData);
-            } );
+
+                this.$nextTick(()=>{
+                    
+                    this.getData(this.treeData);
+                    
+                })
+            });
+        },
+        getData(data,value){
+			
+            data.forEach(v=>{
+                
+                if(v.class === this.defaultClass) {
+                    this.$emit('node-init',v);
+                    return false;
+                }
+
+                if(v.children){
+                    this.getData(v.children,value);
+                }
+            })
         },
         onFilterNode:_.debounce((value)=>{
             

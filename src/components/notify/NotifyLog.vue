@@ -19,7 +19,6 @@
                         :prop="item.field"
                         :label="item.title" 
                         sortable 
-                        show-overflow-tooltip
                         :key="index"
                         :width="item.width"
                         :formatter="item.render"
@@ -35,7 +34,7 @@
                                         width="550"
                                         trigger="click">
                                         <el-container>
-                                            <el-main>
+                                            <el-main v-if="scope.row[item.field]">
                                                 <el-input type="textarea" :value="scope.row[item.field].join('\n')" :rows="6" style="width:98%;white-space:nowrap;"></el-input>
                                             </el-main>
                                         </el-container>
@@ -83,104 +82,6 @@
                     </template>
                 </el-table-column>
             </el-table>
-            <!-- 发送日志 -->
-            <el-drawer
-                :title="'发送日志 ' + dt.drawer.sendstatus.data.id"
-                :visible.sync="dt.drawer.sendstatus.show"
-                v-if="dt.drawer.sendstatus.data">
-                <div style="height: calc(100vh - 0px);overflow:auto;padding:20px;">
-                    {{dt.drawer.sendstatus.data}}
-                    <h4>{{new Date(dt.drawer.sendstatus.data.sendtime).toLocaleString()}}</h4>
-                    <el-timeline>
-                        <el-timeline-item
-                            placement="top"
-                            v-for="activity in dt.drawer.sendstatus.data.send"
-                            :key="activity.id"
-                            :timestatmp="dt.drawer.sendstatus.data.sendtime">
-                            <el-card>
-                                <div v-for="v in Object.entries(activity)" :key="index">
-                                    <p v-if="v[0]==='status'">
-                                        发送状态: <span v-if="v[1]==='fail'" style="background:#ff0000;color:#ffffff;padding:3px;font-size:10px;">发送失败</span>
-                                                    <span v-else style="background:#4caf50;color:#ffffff;padding:3px;font-size:10px;">发送成功</span>
-                                    </p>
-                                    <p v-else-if="v[0]==='id'">
-                                        告警ID：<code>{{v[1]}}</code>
-                                    </p>
-                                    <p v-else-if="v[0]==='msg'">
-                                        发送摘要：<code>{{v[1]}}</code>
-                                    </p>
-                                    <p v-else>
-                                        v[0]：<code>{{v[1]}}</code>
-                                    </p>
-                                </div>
-                            </el-card>
-                        </el-timeline-item>
-                    </el-timeline>
-                </div>
-            </el-drawer>
-            <el-drawer
-                title="发送详情"
-                :visible.sync="dt.drawer.sendcontent.show"
-                v-if="dt.drawer.sendcontent.data">
-                <div style="height: calc(100vh - 90px);overflow:auto;padding:20px;">
-                    <el-timeline>
-                        <el-timeline-item
-                            placement="top"
-                            v-for="(activity,idx) in dt.drawer.sendcontent.data.sendContent"
-                            :key="activity.id"
-                            :timestatmp="activity.ctime">
-                            <el-card>
-                                <div v-for="v in Object.entries(activity)" :key="index">
-                                    <div v-if="v[0]==='rule'">
-                                        发送规则：{{v[1]}}
-                                    </div>
-                                    <div v-else-if="v[0]==='id'">
-                                        告警ID：<code>{{v[1]}}</code>
-                                        <p>发送状态：
-                                            <el-button type="success" v-if="getSendStatus(dt.drawer.sendcontent.data,idx)==='ok'">成功</el-button>
-                                            <el-button type="danger" v-else-if="getSendStatus(dt.drawer.sendcontent.data,idx)==='fail'">失败</el-button>
-                                            <el-button type="primary" v-else>未知</el-button>
-                                        </p>
-                                    </div>
-                                    <p v-else-if="v[0]==='to'">
-                                        接收人员：<el-select :value="v[1][0]" clearable placeholder="接收人员">
-                                                    <el-option
-                                                        v-for="item in v[1]"
-                                                        :key="item.name"
-                                                        :label="item.name"
-                                                        :value="item">
-                                                    </el-option>
-                                                    <span style="float: left">{{ item }}</span>
-                                                </el-select>
-                                    </p>
-                                    <p v-else-if="v[0]==='ctime'">
-                                        发送时间：{{ new Date(v[1]).toLocaleString() }}
-                                    </p>
-                                    <div v-else-if="v[0]==='msg'">
-                                        发送内容：
-                                        <div class="iphone">
-                                            <div class="iphone-top">
-                                                <span class="camera"></span>
-                                                <span class="sensor"></span>
-                                                <span class="speaker"></span>
-                                            </div>
-                                            <div class="iphone-screen">
-                                                <div v-html="v[1]" style="padding: 10px;overflow-y: auto;"></div>
-                                            </div>
-                                            <div class="iphone-bottom">
-                                                <span></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <p v-else>
-                                        {{v[0]}}：<code>{{v[1]}}</code>
-                                    </p>
-                                </div>
-                            </el-card>
-                        </el-timeline-item>
-                    </el-timeline>        
-                </div>
-            </el-drawer>
         </el-main>
         <el-footer style="height:40px;line-height:40px;background:#f2f2f2;">
             {{ dt.info.join(' &nbsp; | &nbsp;') }}
@@ -219,7 +120,7 @@
             pickPeople(val){
                 try{
                     return val.map(v=>{
-                    return v.split(",")[0]}
+                        return v.split(",")[0]}
                     ).sort().join(" ")
                 }catch(err){
                     console.error(err);
@@ -259,7 +160,7 @@
                         this.initData();
                     }else {
                         this.dt.rows = this.dt.rows.filter(data => {
-                            return !val || JSON.stringify(data).includes(val.toLowerCase())
+                            return !val || JSON.stringify(data).includes(val) || JSON.stringify(data).toLowerCase().includes(val)
                         })
                     }
                 }

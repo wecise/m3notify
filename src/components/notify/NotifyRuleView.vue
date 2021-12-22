@@ -398,7 +398,7 @@ export default {
           this.initData();
         }else {
           this.dt.rows = this.dt.rows.filter(data => {
-              return !val || JSON.stringify(data).includes(val.toLowerCase());
+              return !val || JSON.stringify(data).includes(val) || JSON.stringify(data).toLowerCase().includes(val)
           })
         }
       }

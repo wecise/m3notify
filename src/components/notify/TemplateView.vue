@@ -130,9 +130,10 @@
                         :inactive-value="false"></el-switch>
                   </el-form-item>
 
-                  <el-form-item label="自定义模版" style="display:none;">
+                  <el-form-item label="自定义模版">
                     <span>
                         <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 可自行调整添加常量属性</span>
+                        <el-input type="textarea" :rows="8" v-model="dialog.new.data.template"></el-input>
                         <VueEditor
                             v-model="dialog.new.data.source"
                             @init="onEditorInit('newEditorRef','new')"
@@ -140,7 +141,7 @@
                             :theme="editor.theme.value"
                             width="100%"
                             height="calc(100vh - 560px)"
-                            style="border: 1px solid #dddddd;border-radius: 15px;"
+                            style="border: 1px solid #dddddd;border-radius: 15px;display:none;"
                             ref="newEditorRef"
                         ></VueEditor>
                       </span>
@@ -206,60 +207,63 @@
                 <el-form-item label="名称" prop="name">
                   <el-input v-model="dialog.edit.data.name" disabled></el-input>
                 </el-form-item>
+                
+                <template v-if="editEnable">
+                  <el-form-item label="数据源">
+                      <el-input v-model="dialog.template.datasource.class" disabled style="width:50%">
+                          <el-dropdown slot="prepend">
+                              <span class="el-dropdown-link">
+                                  <i class="el-icon-coin el-icon--right" style="cursor:pointer;"></i>
+                              </span>
+                              <el-dropdown-menu slot="dropdown">
+                                  <DatasourceView ref="datasourceEditRef"
+                                      :root="dialog.template.datasource.root" 
+                                      @node-click="onDataSourceSelect($event,'edit')"></DatasourceView>
+                              </el-dropdown-menu>
+                          </el-dropdown>
+                      </el-input>
+                      <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择数据源</span>
+                  </el-form-item>
+                  
+                  <el-form-item label="属性" v-if="dialog.template.datasource.class">
+                      <DataFieldsView :fields="dialog.template.datasource.fields"
+                          @fields-change="onDataFieldsSelect($event,'edit')"
+                          @node-click="onDataFieldsSelect($event,'edit')"
+                          :selected="dialog.edit.data.content.fields"
+                          style="width:50%"></DataFieldsView>
+                        <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成通知模版</span>
+                  </el-form-item>
+                  <el-form-item label="开启抑制策略" v-if="dialog.template.datasource.class">
+                    <el-switch v-model="dialog.edit.data.content.compression.enable"
+                          active-color="#13ce66"
+                          :active-value="true"
+                          :inactive-value="false"></el-switch>
+                    <div v-if="dialog.edit.data.content.compression.enable">
+                      <DataFieldsView :fields="dialog.template.datasource.fields" 
+                            @fields-change="onCompressionFieldsSelect($event,'edit')"
+                            @node-click="onCompressionFieldsSelect($event,'edit')"
+                            :selected="dialog.edit.data.content.compression.keys"
+                            style="width:50%"></DataFieldsView>
+                            <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成抑制主键</span>
+                      <p>
+                        <el-input-number v-model="dialog.edit.data.content.compression.timer" :min="0"></el-input-number>
+                        <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 抑制时间窗口(单位：秒)</span>
+                      </p>
+                    </div>
+                  </el-form-item>
 
-                <el-form-item label="数据源">
-                    <el-input v-model="dialog.template.datasource.class" disabled style="width:50%">
-                        <el-dropdown slot="prepend">
-                            <span class="el-dropdown-link">
-                                <i class="el-icon-coin el-icon--right" style="cursor:pointer;"></i>
-                            </span>
-                            <el-dropdown-menu slot="dropdown">
-                                <DatasourceView ref="datasourceEditRef"
-                                    :root="dialog.template.datasource.root" 
-                                    @node-click="onDataSourceSelect($event,'edit')"></DatasourceView>
-                            </el-dropdown-menu>
-                        </el-dropdown>
-                    </el-input>
-                    <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择数据源</span>
-                </el-form-item>
-
-                <el-form-item label="属性" v-if="dialog.template.datasource.class">
-                    <DataFieldsView :fields="dialog.template.datasource.fields"
-                        @fields-change="onDataFieldsSelect($event,'edit')"
-                        @node-click="onDataFieldsSelect($event,'edit')"
-                        :selected="dialog.edit.data.content.fields"
-                        style="width:50%"></DataFieldsView>
-                      <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成通知模版</span>
-                </el-form-item>
-                <el-form-item label="开启抑制策略" v-if="dialog.template.datasource.class">
-                  <el-switch v-model="dialog.edit.data.content.compression.enable"
+                  <el-form-item label="HTML支持" prop="content">
+                      <el-switch v-model="dialog.edit.data.content.html"
                         active-color="#13ce66"
                         :active-value="true"
                         :inactive-value="false"></el-switch>
-                  <div v-if="dialog.edit.data.content.compression.enable">
-                    <DataFieldsView :fields="dialog.template.datasource.fields" 
-                          @fields-change="onCompressionFieldsSelect($event,'edit')"
-                          @node-click="onCompressionFieldsSelect($event,'edit')"
-                          :selected="dialog.edit.data.content.compression.keys"
-                          style="width:50%"></DataFieldsView>
-                          <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成抑制主键</span>
-                    <p>
-                      <el-input-number v-model="dialog.edit.data.content.compression.timer" :min="0"></el-input-number>
-                      <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 抑制时间窗口(单位：秒)</span>
-                    </p>
-                  </div>
-                </el-form-item>
-
-                <el-form-item label="HTML支持" prop="content">
-                    <el-switch v-model="dialog.edit.data.content.html"
-                      active-color="#13ce66"
-                      :active-value="true"
-                      :inactive-value="false"></el-switch>
-                </el-form-item>
+                  </el-form-item>
+                </template>
                 
                 <el-form-item label="自定义模版">
                   <span>
                     <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 可自行调整添加常量属性</span>
+                    <el-input type="textarea" :rows="8" v-model="dialog.edit.data.template"></el-input>
                     <VueEditor
                         v-model="dialog.edit.data.source"
                         @init="onEditorInit('editorRef','edit')"
@@ -308,6 +312,7 @@
         </el-container>
         <span slot="footer" class="dialog-footer">
           <el-button @click="dialog.edit.show = false">关 闭</el-button>
+          <!-- <el-button @click="dialog.edit.data.content.template =dialog.edit.data.template = ''">重 置 </el-button> -->
           <el-button type="primary" @click="onUpdate" :loading="dialog.edit.loading">确 定</el-button>
         </span>
       </el-dialog>
@@ -366,6 +371,7 @@ export default {
             attr: {remark: "",status:"1"},
             parent: `/script/matrix/m3event/notify/template`,
             source: "",
+            template: "",
             content: {
               class: "",
               fields: "",
@@ -393,6 +399,7 @@ export default {
               attr: {remark: "",status:"1"},
               parent: `/script/matrix/m3event/notify/template`,
               source: "",
+              template: "",
               content: {
                 class: "",
                 fields: "",
@@ -429,17 +436,20 @@ export default {
   computed:{
     newTemplatePriview(){
       try{
-        return this.dialog.new.data.content.template;
+        return "";//this.dialog.new.data.content.template;
       }catch(err){
         return "";
       }
     },
     editTemplatePriview(){
       try{
-        return this.dialog.edit.data.content.template; 
+        return "";//this.dialog.edit.data.content.template; 
       }catch(err){
         return "";
       }
+    },
+    editEnable(){
+      return this.dialog.edit.data.template.length <=0 ? true : false;
     }
   },
   watch: {
@@ -471,7 +481,7 @@ export default {
             this.initData();
           }else {
             this.dt.rows = this.dt.rows.filter(data => {
-                return !val || JSON.stringify(data).includes(val.toLowerCase())
+                return !val || JSON.stringify(data).includes(val) || JSON.stringify(data).toLowerCase().includes(val)
             })
           }
         }
@@ -481,18 +491,25 @@ export default {
         // 根据fields的name找出title，生产模版用做title显示用
         let content = this.genTemplateByFields(val);
         this.dialog.new.data.source = JSON.stringify(content,null,2);
+
+        this.dialog.new.data.template = val.template;
       },
       deep: true,
       immediate: true
     },
     'dialog.edit.data.content':{
       handler(val){
-        // 根据fields的name找出title，生产模版用做title显示用
-        let content = this.genTemplateByFields(val);
-        this.dialog.edit.data.source = JSON.stringify(content,null,2);
+        
+        if(_.isEmpty(val.template)){
+          // 根据fields的name找出title，生产模版用做title显示用
+          let content = this.genTemplateByFields(val);
+          this.dialog.edit.data.source = JSON.stringify(content,null,2);
+        }else{
+          this.dialog.edit.data.template = val.template;
+          this.dialog.edit.data.source = JSON.stringify(val,null,2);
+        }
       },
-      deep: true,
-      immediate: true
+      deep: true
     },
     'dialog.new.data.content.compression.enable'(val){
       if(!val){
@@ -646,8 +663,8 @@ export default {
 
       this.dialog.new.loading = true;
 
-      let content = _.clone(this.dialog.new.data.content);
-      content.template = this.$refs.newTemplatePriviewRef.textContent;
+      let content = this.dialog.new.data.content;
+      content.template = this.dialog.new.data.template;
       
       let param = {
                     parent: this.dialog.new.data.parent, name: [this.dialog.new.data.name,this.dialog.new.data.ftype].join(".").replace(/.json.json/,'.json'), 
@@ -662,6 +679,25 @@ export default {
           this.initData();
           this.dialog.new.loading = false;
           this.dialog.new.show = false;
+          this.dialog.new.data = {
+            name: "",
+            ftype: "json",
+            attr: {remark: "",status:"1"},
+           
+            source: "",
+            template: "",
+            content: {
+              class: "",
+              fields: "",
+              compression:{
+                enable: false,
+                keys: [],
+                timer: 0
+              },
+              template: "",
+              html: false
+            }
+          };
       }).catch((err)=>{
           this.$message({
             type: "error",
@@ -692,22 +728,33 @@ export default {
           cancelButtonText: '取消',
           type: 'error'
       }).then(() => {
-          
-          let param = {parent: item.parent, name: item.name};
 
-          this.m3.dfs.deleteFile(param).then(()=>{
-            this.$message({
-                    type: 'success',
-                    message: '删除模板成功!'
-            });
-            this.initData();
-          }).catch((err)=>{
-            this.$message({
-                type: 'error',
-                message: '删除模板失败 ' + err.message
-            });
-          });
-          
+          // 检查是否被引用
+          let param1 = encodeURIComponent( JSON.stringify({action: "check", model:item}) );
+          this.m3.callFS("/matrix/m3event/notify/templateAction.js",param1).then((rtn)=>{
+            if(rtn.message > 0){
+              this.$message({
+                      type: 'warning',
+                      message: '该模版已被引用，请确认'
+              });
+              return false;
+            }else{
+              let param = {parent: item.parent, name: item.name};
+
+              this.m3.dfs.deleteFile(param).then(()=>{
+                this.$message({
+                        type: 'success',
+                        message: '删除模板成功!'
+                });
+                this.initData();
+              }).catch((err)=>{
+                this.$message({
+                    type: 'error',
+                    message: '删除模板失败 ' + err.message
+                });
+              });
+            }
+          })  
           
       }).catch((err)=>{
         this.$message({
@@ -733,10 +780,13 @@ export default {
     onUpdate(){
 
       this.dialog.edit.loading = true;
+
+      let content = this.dialog.edit.data.content;
+      content.template = this.dialog.edit.data.template;
       
       let param = {
                     parent: this.dialog.edit.data.parent, name: [this.dialog.edit.data.name,this.dialog.edit.data.ftype].join(".").replace(/.json.json/,'.json'), 
-                    data: {content: JSON.stringify(this.dialog.edit.data.content,null,2), ftype: this.dialog.edit.data.ftype, attr: this.dialog.edit.data.attr, index: true}    
+                    data: {content: JSON.stringify(content,null,2), ftype: this.dialog.edit.data.ftype, attr: this.dialog.edit.data.attr, index: true}    
                   };
       this.m3.dfs.newFile(param).then((res)=>{
         

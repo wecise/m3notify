@@ -23,7 +23,8 @@ import PropsBase from './PropsBase.vue'
     export default {
         components: { PropsBase },
         props: {
-            fields: Array
+            fields: Array,
+            selected: String
         },
         data(){
             return {
@@ -34,7 +35,8 @@ import PropsBase from './PropsBase.vue'
                     operator:'',
                     value: ''
                 }],
-                rtype: "and"
+                rtype: "and",
+                source: ""
             }
         },
         watch:{
@@ -52,6 +54,12 @@ import PropsBase from './PropsBase.vue'
             }
         },
         mounted(){
+            this.$nextTick(()=>{
+                let selected = JSON.parse(this.selected);
+                if(selected){
+                    this.attrs = selected;
+                }
+            })
             this.$on("refresh-props",()=>{
                 this.onRefreshProps(this.attrs);
             })
@@ -89,7 +97,9 @@ import PropsBase from './PropsBase.vue'
                         }
                     }
                 }));
-                this.$emit("update-props", mqlStr.join(` ${this.rtype} `));
+                this.source = mqlStr.join(` ${this.rtype} `);
+                this.$emit("update-props", this.source);
+                this.$emit("selected-props", this.attrs);
             }
         }
         

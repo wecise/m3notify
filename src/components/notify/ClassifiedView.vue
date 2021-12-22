@@ -14,9 +14,6 @@
                     <el-tooltip content="新建规则">
                       <el-button type="text" icon="el-icon-plus" @click="onNew"></el-button>
                     </el-tooltip>
-                    <el-tooltip content="导出">
-                      <el-button type="text" icon="el-icon-download"></el-button>
-                    </el-tooltip>
                   </el-header>
                   <el-main>
                     <el-table
@@ -96,26 +93,45 @@
             <el-input v-model="dialog.classified.data.name" :disabled="dialog.classified.action==='update'?true:false"></el-input>
           </el-form-item>
           
-          <el-form-item label="数据源">
+          <el-form-item label="数据源" v-if="dialog.classified.data.sourceconfig.situation==='base'">
               <el-input v-model="dialog.classified.datasource.class" disabled>
                   <el-dropdown slot="prepend">
                       <span class="el-dropdown-link">
                           <i class="el-icon-coin el-icon--right" style="cursor:pointer;"></i>
                       </span>
                       <el-dropdown-menu slot="dropdown">
-                          <DatasourceView :root="dialog.classified.datasource.root" 
-                              @node-click="onDataSourceSelect"></DatasourceView>
+                          <DatasourceView 
+                              :root="dialog.classified.datasource.root"
+                              :defaultClass="dialog.classified.datasource.class"
+                              @node-click="onDataSourceSelect"
+                              @node-init="onDataSourceSelect"></DatasourceView>
                       </el-dropdown-menu>
                   </el-dropdown>
               </el-input>
           </el-form-item>
+
+          <el-form-item :label="dialog.classified.data.sourceconfig.mode==='1'?'生产模式':'测试模式'" prop="mode">
+            <el-switch
+              v-model="dialog.classified.data.sourceconfig.mode"
+              active-color="#13ce66"
+              inactive-color="#dddddd"
+              active-value="1"
+              inactive-value="0">
+            </el-switch>
+            <span class="el-icon-question" style="font-size:10px;color:#999999;padding-left:10px;">测试模式下用户可自定义任意条件，生产模式会增加 limit 和 status 条件【 limit -1：代表所有事件，status: 18（待发送）, 20（已发送）】</span>
+          </el-form-item>
           
           <el-form-item label="场景条件" prop="situation">
+            
             <el-tabs v-model="dialog.activeTab" type="border-card" @tab-click="onTabClick" v-if="dialog.classified.show">
-              <el-tab-pane label="基本" name="base" >
-                  <props-view :fields="dialog.classified.datasource.data.fields" 
+              <el-tab-pane label="基本" name="base" v-if="dialog.classified.data.sourceconfig.situation==='base'">
+                  <props-view 
+                    :fields="dialog.classified.datasource.data.fields" 
+                    :selected="dialog.classified.data.sourceconfig.fields"
                     @update-props="onUpdateProps"
-                    v-if="dialog.classified.datasource.data"></props-view>
+                    @selected-props="onSetSourceConfig"
+                    v-if="dialog.classified.datasource.data"
+                    ref="propsView"></props-view>
               </el-tab-pane>
               <el-tab-pane label="高级" name="adv">
                   <VueEditor
@@ -146,7 +162,7 @@
         </el-form>
         
         <span slot="footer" class="dialog-footer">
-          <el-button @click="onClose">取 消</el-button>
+          <el-button @click="onClose">关 闭</el-button>
           <el-button type="primary" @click="onSave">确 定</el-button>
         </span>
       </el-dialog>
@@ -194,13 +210,19 @@ export default {
             datasource: {
                 root: "/matrix/devops",
                 fields: [],
-                class: "",
+                class: "/matrix/devops/alert_status",
                 data: null
             },
             data: {
               name: "",
               parent:"-1",
               situation:"",
+              sourceconfig:{
+                mode: "0",
+                fields: null,
+                class: "",
+                situation:'base'
+              },
               status:1
             },
             rules: {
@@ -232,7 +254,7 @@ export default {
             this.initData();
           }else {
             this.dt.rows = this.dt.rows.filter(data => {
-                return !val || JSON.stringify(data).includes(val.toLowerCase())
+                return !val || JSON.stringify(data).includes(val) || JSON.stringify(data).toLowerCase().includes(val)
             })
           }
         }
@@ -258,6 +280,23 @@ export default {
               //this.dt.info.push(`已选择 ${val.length} 项`);
               this.dt.info.push(`操作时间： ${this.moment().format("YYYY-MM-DD HH:mm:ss.SSS")}`);
           }
+      },
+      'dialog.classified.data.sourceconfig.mode':{
+        handler(val){
+          // 生产模式
+          if(val === '1'){
+            let lowerStr = this.dialog.classified.data.situation;
+            let lowerArr = lowerStr.split(' and ');
+            lowerArr.unshift('(');
+            lowerArr.push(')');
+            lowerArr.push('status=18 limit -1');
+            this.dialog.classified.data.situation = _.uniq(lowerArr).join(' and ').replace(/\( and/igm,'(').replace(/and \)/igm,')');
+          }else{
+            let lowerStr = this.dialog.classified.data.situation;
+            lowerStr = lowerStr.replace(/ and status=18 limit -1/igm,'').replace(/\(  \)/igm,'').replace(/\( \(  \) \)/igm,'').replace(/\( \( \(/igm,'(').replace(/\) \) \)/igm,')');
+            this.dialog.classified.data.situation = lowerStr;
+          }
+        }
       }
   },
   created(){
@@ -325,47 +364,97 @@ export default {
 
       this.dialog.classified.show = true;
 
-      if(_.isNull(this.editor.value)){
+      /* if(_.isNull(this.editor.value)){
         this.dialog.activeTab = 'base';
       }else{
         this.dialog.activeTab = 'adv';
-      }
+      } */
+
+      this.dialog.activeTab = this.dialog.classified.data.sourceconfig.situation;
     },
     onDelete(index,item){
-      console.log(index)
+      
       this.$confirm(`确认要删除该分类：${item.name}？`, '提示', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
-          type: 'warning'
+          type: 'error'
       }).then(() => {
-          
-          let param = encodeURIComponent( JSON.stringify({action: "delete", model:item}) );
 
-          this.m3.callFS("/matrix/m3event/notify/situationAction.js",param).then(()=>{
-            this.$message({
-                    type: 'success',
-                    message: '删除成功'
-            });
-            this.initData();
-          }).catch((err)=>{
-            this.$message({
-                type: 'error',
-                message: '删除失败 ' + err.message
-            });
-          });
-          
-          
+          // 检查是否被引用
+          let param1 = encodeURIComponent( JSON.stringify({action: "check", model:item}) );
+          this.m3.callFS("/matrix/m3event/notify/situationAction.js",param1).then((rtn)=>{
+            
+            if(rtn.message > 0){
+              this.$message({
+                      effect: 'dark',
+                      type: 'warning',
+                      message: '该规则已被引用，请确认'
+              });
+              return false;
+            }else{
+              
+              let param = encodeURIComponent( JSON.stringify({action: "delete", model:item}) );
+
+              this.m3.callFS("/matrix/m3event/notify/situationAction.js",param).then(()=>{
+                this.$message({
+                        effect: 'dark',
+                        type: 'success',
+                        message: '删除成功'
+                });
+                this.initData();
+              }).catch((err)=>{
+                this.$message({
+                    type: 'error',
+                    message: '删除失败 ' + err.message
+                });
+              });
+            }
+          })  
       })
     },
     onRefresh(){
       this.initData();
     },
     onClose(){
+
+      this.$refs.propsView.onRemoveAll();
+      
       this.dialog.classified.show = false;
+
+      // reset
+      this.dialog.activeTab = 'base';
+      this.dialog.classified.data = {
+                              name: "",
+                              parent:"-1",
+                              situation:"",
+                              sourceconfig:{
+                                mode: "0",
+                                fields:null,
+                                class: "",
+                                situation:'base'
+                              },
+                              status:1
+                            };
+      
+      this.dialog.classified.action = "add";
+      
       this.onRefresh();
     },
     onSave(){
-      this.dialog.classified.data.situation = this.dialog.classified.data.situation.replace(/\'/g,"''");
+      
+      this.dialog.classified.data.sourceconfig.situation = this.dialog.activeTab;
+
+      if(this.dialog.activeTab === 'base'){
+        if(this.dialog.classified.data.sourceconfig.mode === '1'){
+          this.dialog.classified.data.situation = `(${this.$refs.propsView.source.replace(/\'/g,"''")}) and status=18 limit -1`;
+        }else{
+          this.dialog.classified.data.situation = `${this.$refs.propsView.source.replace(/\'/g,"''")}`;
+        }
+        
+      } else{
+        this.dialog.classified.data.situation = this.dialog.classified.data.situation.replace(/\'/g,"''");
+      }
+
       let param = encodeURIComponent( JSON.stringify({action: this.dialog.classified.action, model:this.dialog.classified.data}) );
       this.m3.callFS("/matrix/m3event/notify/situationAction.js",param).then(()=>{
         this.$message({
@@ -373,7 +462,8 @@ export default {
             message: this.dialog.classified.action=='add'?"新建成功":'更新成功'
           })  
         this.initData();
-        this.dialog.classified.show = false;
+        
+        this.onClose();
       }).catch((err)=>{
           this.$message({
             type: "error",
@@ -420,6 +510,21 @@ export default {
         editor.on('mousemove', ()=> {
             editor.resize();
         });
+
+        editor.on('change',()=>{
+            
+            if(!this.$refs.propsView) return false;
+
+            let source = this.$refs.propsView.source;
+            let value = editor.getValue();
+            
+            if( value !== "" ){
+              if(!value === source){
+                this.dialog.activeTab = 'adv';
+              }
+            } 
+        })
+
     },
     onEditorInit(){
         require("brace/ext/language_tools"); //language extension prerequsite...
@@ -429,11 +534,15 @@ export default {
         this.initEditor();
     },
     onUpdateProps(data){
-      this.dialog.classified.data.situation = data;
+      // this.dialog.classified.data.situation = data;
+    },
+    onSetSourceConfig(data){
+      this.dialog.classified.data.sourceconfig.class = this.dialog.classified.datasource.class;
+      this.dialog.classified.data.sourceconfig.fields = JSON.stringify(data);
     },
     onTabClick(tab){
       if(tab.name === 'adv'){
-        this.$emit('refresh-props');
+        this.dialog.classified.data.situation = this.$refs.propsView.source;
       }
     }
   }

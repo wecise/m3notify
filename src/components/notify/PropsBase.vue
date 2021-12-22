@@ -1,6 +1,6 @@
 <template>
     <div v-if="model" class="box">
-        <el-select v-model="fieldSelected" filterable value-key="name" placeholder="属性" style="width:30%;">
+        <el-select v-model="model.field" filterable value-key="name" placeholder="属性" style="width:30%;">
             <el-option label="" value="" />
             <el-option :label="att.name" :value="att.name" :key="att.name" v-for="att in attrs">
                 <span style="float: left">{{ att.title || att.name }}</span>
@@ -150,7 +150,7 @@
             }
         },
         watch:{
-            fieldSelected(val){
+            'model.field'(val){
                 try{
                     let field = _.find(this.attrs,{name:val});
                     this.model.field = val;
@@ -160,6 +160,13 @@
                     this.operatorsSelected = this.operators['varchar'];
                 }
             }
+        },
+        created(){
+            this.$nextTick(()=>{
+                if(this.model){
+                    this.fieldSelected = this.model.field;
+                }
+            })
         },
         methods: {
             onNew(){
