@@ -292,21 +292,8 @@ export default {
         info:[]
       },
       rtype: {
-        list: [
-          { name:'sms', title:'短信', type:"netgate", 
-            netgate:{
-              address:"47.92.151.165", port:8080, username:"",password:"", cron: "*/1 * * * *", group: "mxsvr", log: true, retry_interval: 5, retry_num: 3, send_num: 5
-            },
-            jdbc:{
-              driver:"com.mysql.jdbc.Driver", url:"jdbc:mysql://47.92.151.165:port/dbname", username:"",password:"", cron: "*/1 * * * *", group: "mxsvr", log: true, retry_interval: 5, retry_num: 3, send_num: 5
-            },
-            rest:{
-              url:"http://47.92.151.165", username:"",password:"", cron: "*/1 * * * *", group: "mxsvr", log: true, retry_interval: 5, retry_num: 3, send_num: 5
-            }
-          } ,
-          { name:'email', title:'邮件', address:"smtp.mxhichina.com", port:25, username:"",password:"", cron: "*/1 * * * *", group: "mxsvr", log: true, retry_interval: 5, retry_num: 3, send_num: 5},
-          { name:'wechat', title:'企业微信', address:"47.92.151.165", port:8080, username:"",password:"", cron: "*/1 * * * *", group: "mxsvr", log: true, retry_interval: 5, retry_num: 3, send_num: 5}
-        ]
+        root: '/script/matrix/m3event/notify/server',
+        list: []
       },
       persons: {
         props: {
@@ -506,6 +493,21 @@ export default {
         console.error(err);
         this.dt.loading = false;
       })
+
+      /* rtype.list */
+      let rtypeParam = { parent: this.rtype.root, fullname: this.rtype.root, name: 'server.json' };
+      this.m3.dfs.read(rtypeParam).then( res=>{
+          let rtn = JSON.parse(res);
+          this.rtype.list = _.compact(_.map(rtn,(v,k)=>{ 
+            if(v.status && k !== 'base'){
+              return  v; 
+            }
+          }));
+      }).catch(err=>{
+        console.error(err);
+        this.dt.loading = false;
+      })
+      
     },
     rowClassName({rowIndex}){
         return `notifyRule-row-${rowIndex}`;
