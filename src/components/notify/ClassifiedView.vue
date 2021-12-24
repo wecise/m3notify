@@ -37,15 +37,25 @@
                               :formatter="item.render"
                               v-if="item.visible">
                               <template slot-scope="scope">
-                                  <div style="height:30px;line-height:30px;" v-if="item.field=='tags'">
-                                      <TagView domain='notifySituation' :model.sync="scope.row.tags" :id="scope.row.id" :limit="1"></TagView>
-                                  </div>
                                   <div v-html='item.render(scope.row, scope.column, scope.row[item.field], scope.$index)' 
-                                      v-else-if="typeof item.render === 'function'">
+                                      v-if="typeof item.render === 'function'">
                                   </div>
-                                  <div v-else>
-                                      {{scope.row[item.field]}}
-                                  </div>
+                                  <template v-else>
+                                    <div style="height:30px;line-height:30px;" v-if="item.field=='tags'">
+                                        <TagView domain='notifySituation' :model.sync="scope.row.tags" :id="scope.row.id" :limit="1"></TagView>
+                                    </div>
+                                    <div style="display:flex;flex-wrap:wrap;" v-else-if="item.field === 'situation'">
+                                        <el-popover
+                                            width="550"
+                                            trigger="click">
+                                            <el-input type="textarea" :value="scope.row[item.field]" :rows="6" style="width:98%;white-space:nowrap;"></el-input>
+                                            <el-button type="text" slot="reference">{{ scope.row[item['field']] }} <i class="el-icon-tickets"></i></el-button>
+                                        </el-popover>
+                                    </div>
+                                    <div v-else>
+                                        {{scope.row[item.field]}}
+                                    </div>
+                                  </template>
                               </template>
                           </el-table-column>
                       </template>
@@ -116,9 +126,10 @@
               active-color="#13ce66"
               inactive-color="#dddddd"
               active-value="1"
-              inactive-value="0">
+              inactive-value="0"
+              @change="onToggleMode">
             </el-switch>
-            <span class="el-icon-question" style="font-size:10px;color:#999999;padding-left:10px;">测试模式下用户可自定义任意条件，生产模式会增加 limit 和 status 条件【 limit -1：代表所有事件，status: 18（待发送）, 20（已发送）】</span>
+            <span class="el-icon-question" style="font-size:10px;color:#999999;padding-left:10px;">测试模式下用户可自定义任意条件，生产模式会增加 limit 和 status 条件【 limit -1：代表所有事件，status: 20（已发送）】</span>
           </el-form-item>
           
           <el-form-item label="场景条件" prop="situation">
@@ -219,7 +230,7 @@ export default {
               situation:"",
               sourceconfig:{
                 mode: "0",
-                fields: null,
+                fields: "",
                 class: "",
                 situation:'base'
               },
@@ -280,23 +291,6 @@ export default {
               //this.dt.info.push(`已选择 ${val.length} 项`);
               this.dt.info.push(`操作时间： ${this.moment().format("YYYY-MM-DD HH:mm:ss.SSS")}`);
           }
-      },
-      'dialog.classified.data.sourceconfig.mode':{
-        handler(val){
-          // 生产模式
-          if(val === '1'){
-            let lowerStr = this.dialog.classified.data.situation;
-            let lowerArr = lowerStr.split(' and ');
-            lowerArr.unshift('(');
-            lowerArr.push(')');
-            lowerArr.push('status=18 limit -1');
-            this.dialog.classified.data.situation = _.uniq(lowerArr).join(' and ').replace(/\( and/igm,'(').replace(/and \)/igm,')');
-          }else{
-            let lowerStr = this.dialog.classified.data.situation;
-            lowerStr = lowerStr.replace(/ and status=18 limit -1/igm,'').replace(/\(  \)/igm,'').replace(/\( \(  \) \)/igm,'').replace(/\( \( \(/igm,'(').replace(/\) \) \)/igm,')');
-            this.dialog.classified.data.situation = lowerStr;
-          }
-        }
       }
   },
   created(){
@@ -417,7 +411,7 @@ export default {
     },
     onClose(){
 
-      this.$refs.propsView.onRemoveAll();
+      // this.$refs.propsView.onRemoveAll();
       
       this.dialog.classified.show = false;
 
@@ -429,7 +423,7 @@ export default {
                               situation:"",
                               sourceconfig:{
                                 mode: "0",
-                                fields:null,
+                                fields: "",
                                 class: "",
                                 situation:'base'
                               },
@@ -445,25 +439,41 @@ export default {
       this.dialog.classified.data.sourceconfig.situation = this.dialog.activeTab;
 
       if(this.dialog.activeTab === 'base'){
+
         if(this.dialog.classified.data.sourceconfig.mode === '1'){
-          this.dialog.classified.data.situation = `(${this.$refs.propsView.source.replace(/\'/g,"''")}) and status=18 limit -1`;
+          this.dialog.classified.data.situation = `${this.$refs.propsView.source.replace(/\'/g,"''")} and status!=20 limit -1`;
         }else{
           this.dialog.classified.data.situation = `${this.$refs.propsView.source.replace(/\'/g,"''")}`;
         }
         
       } else{
-        this.dialog.classified.data.situation = this.dialog.classified.data.situation.replace(/\'/g,"''");
+        if(this.dialog.classified.data.sourceconfig.mode === '1'){
+          this.dialog.classified.data.situation = `${this.dialog.classified.data.situation.replace(/\'/g,"''").replace(/ and status!=20 limit -1/igm,'').replace(/ status!=20 limit -1/igm,'')} and status!=20 limit -1`;
+        }else{
+          this.dialog.classified.data.situation = `${this.dialog.classified.data.situation.replace(/\'/g,"''")}`;
+        }
+      }
+
+      if(_.isEmpty(this.dialog.classified.data.situation)){
+        this.$message.warning("规则条件为空，请确认");
+        return false;
       }
 
       let param = encodeURIComponent( JSON.stringify({action: this.dialog.classified.action, model:this.dialog.classified.data}) );
-      this.m3.callFS("/matrix/m3event/notify/situationAction.js",param).then(()=>{
-        this.$message({
-            type: "success",
-            message: this.dialog.classified.action=='add'?"新建成功":'更新成功'
-          })  
-        this.initData();
-        
-        this.onClose();
+      this.m3.callFS("/matrix/m3event/notify/situationAction.js",param).then(rtn=>{
+          if(rtn.status === 'ok'){
+            this.$message({
+                type: "success",
+                message: this.dialog.classified.action=='add'?"新建成功":'更新成功'
+              })  
+            this.onClose();
+            this.initData();
+          }else{
+            this.$message({
+              type: "error",
+              message: this.dialog.classified.action=='add'?"新建失败 ":"更新失败 " + rtn.message
+            })  
+          }
       }).catch((err)=>{
           this.$message({
             type: "error",
@@ -486,6 +496,21 @@ export default {
           })
 
       });
+    },
+    /* 切换生产模式 */
+    onToggleMode(val){
+      // 生产模式
+      if(val === '1'){
+        let content = this.dialog.classified.data.situation;
+        let arr = [];
+        arr.push(content);
+        arr.push('status!=20 limit -1');
+        this.dialog.classified.data.situation = arr.join(' and ');
+      }else{
+        let content = this.dialog.classified.data.situation;
+        content = content.replace(/ and status!=20 limit -1/igm,'').replace(/ status!=20 limit -1/igm,'');
+        this.dialog.classified.data.situation = content;
+      }
     },
     onMouseEnter(data){
       this.$set(data, 'show', true)
