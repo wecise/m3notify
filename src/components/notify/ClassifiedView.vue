@@ -459,27 +459,40 @@ export default {
         return false;
       }
 
-      let param = encodeURIComponent( JSON.stringify({action: this.dialog.classified.action, model:this.dialog.classified.data}) );
-      this.m3.callFS("/matrix/m3event/notify/situationAction.js",param).then(rtn=>{
-          if(rtn.status === 'ok'){
-            this.$message({
-                type: "success",
-                message: this.dialog.classified.action=='add'?"新建成功":'更新成功'
-              })  
-            this.onClose();
-            this.initData();
-          }else{
-            this.$message({
-              type: "error",
-              message: this.dialog.classified.action=='add'?"新建失败 ":"更新失败 " + rtn.message
-            })  
+      let check = encodeURIComponent( JSON.stringify({action: 'namecheck', model:this.dialog.classified.data}) );
+
+      this.m3.callFS("/matrix/m3event/notify/situationAction.js",check).then(res=>{
+
+          if(res.message && this.dialog.classified.action === 'add'){
+            this.$message.warning("通知规则名称已存在，请确认");
+            return false;
+          } else {
+            let param = encodeURIComponent( JSON.stringify({action: this.dialog.classified.action, model:this.dialog.classified.data}) );
+            this.m3.callFS("/matrix/m3event/notify/situationAction.js",param).then(rtn=>{
+                if(rtn.status === 'ok'){
+                  this.$message({
+                      type: "success",
+                      message: this.dialog.classified.action=='add'?"新建成功":'更新成功'
+                    })  
+                  this.onClose();
+                  this.initData();
+                }else{
+                  this.$message({
+                    type: "error",
+                    message: this.dialog.classified.action=='add'?"新建失败 ":"更新失败 " + rtn.message
+                  })  
+                }
+            }).catch((err)=>{
+                this.$message({
+                  type: "error",
+                  message: this.dialog.classified.action=='add'?"新建失败 ":"更新失败 " + err.message
+                })
+            }) 
           }
-      }).catch((err)=>{
-          this.$message({
-            type: "error",
-            message: this.dialog.classified.action=='add'?"新建失败 ":"更新失败 " + err.message
-          })
-      }) 
+
+      }).catch(err=>{
+        console.error(err);
+      })
     },
     onToggleStatus(row){
       row.situation = row.situation.replace(/\'/g,"''");

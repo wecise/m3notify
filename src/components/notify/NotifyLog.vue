@@ -1,12 +1,39 @@
 <template>
     <el-container style="height:calc(100vh - 135px);" @mouseover.native="onLayout">
-        <el-header>
-            <el-tooltip content="刷新">
-                <el-button type="text" icon="el-icon-refresh" @click="onRefresh"></el-button>
-            </el-tooltip>
+        <el-header style="padding:20px;">
+            <el-form :inline="true" :model="formInline" class="demo-form-inline" size="mini">
+               <!--  <el-form-item label="事件ID">
+                    <el-input v-model="search.id" clearable></el-input>
+                </el-form-item> -->
+                <el-form-item label="接收人">
+                    <el-input v-model="search.person" clearable></el-input>
+                </el-form-item>
+                <el-form-item label="时间区间">
+                    <el-date-picker
+                        size="mini"
+                        v-model="search.time.value"
+                        :picker-options="search.time.options"
+                        type="datetimerange"
+                        value-format="timestamp"
+                        range-separator="至"
+                        start-placeholder="开始时间"
+                        end-placeholder="结束时间"
+                        ref="datePicker">
+                    </el-date-picker>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="success" @click="onSearch">查询</el-button>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="default" @click="onRefresh">刷新</el-button>
+                </el-form-item>
+            </el-form>
+
         </el-header>
-        <el-main style="overflow: hidden;">
+        <el-main style="overflow: hidden;padding-top:0px;">
             <el-table
+                border
+                stripe
                 v-loading="dt.loading"
                 element-loading-spinner="el-icon-loading"
                 :data="dt.rows"
@@ -95,6 +122,10 @@
     
     export default{
         data() {
+            const eTime = new Date();
+            const sTime = new Date();
+            sTime.setTime(sTime.getTime() - 3600 * 1000 * 1);
+
             return {
                 dt: {
                     loading: false,
@@ -113,6 +144,70 @@
                             data: null
                         }
                     }
+                },
+                search:{
+                    time: {
+                        options: {
+                            shortcuts: [
+                            {
+                                text: '最近30分钟',
+                                onClick(picker) {
+                                const end = new Date();
+                                const start = new Date();
+                                start.setTime(start.getTime() - 1800 * 1000 * 1);
+                                picker.$emit('pick', [start, end]);
+                                }
+                            },
+                            {
+                                text: '最近一小时',
+                                onClick(picker) {
+                                const end = new Date();
+                                const start = new Date();
+                                start.setTime(start.getTime() - 3600 * 1000 * 1);
+                                picker.$emit('pick', [start, end]);
+                                }
+                            },
+                            {
+                                text: '最近一天',
+                                onClick(picker) {
+                                const end = new Date();
+                                const start = new Date();
+                                start.setTime(start.getTime() - 3600 * 1000 * 24);
+                                picker.$emit('pick', [start, end]);
+                                }
+                            },
+                            {
+                                text: '最近一周',
+                                onClick(picker) {
+                                const end = new Date();
+                                const start = new Date();
+                                start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+                                picker.$emit('pick', [start, end]);
+                                }
+                            }, 
+                            {
+                                text: '最近一个月',
+                                onClick(picker) {
+                                const end = new Date();
+                                const start = new Date();
+                                start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+                                picker.$emit('pick', [start, end]);
+                                }
+                            }, 
+                            {
+                                text: '最近三个月',
+                                onClick(picker) {
+                                const end = new Date();
+                                const start = new Date();
+                                start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
+                                picker.$emit('pick', [start, end]);
+                                }
+                            }]
+                        },
+                        value: [sTime,eTime]
+                    },
+                    id:"",
+                    person: ""
                 }
             }
         },
@@ -231,6 +326,39 @@
                     console.error(err);
                     return 'unknown';
                 }
+            },
+            onSearch(){
+                let tmp = _.cloneDeep(this.search);
+                let term = _.extend(tmp, {time:this.search.time.value});
+
+                let param = encodeURIComponent(JSON.stringify(  {action:'search', data:term} ));
+                
+                this.m3.callFS("/matrix/m3event/notify/logAction.js",param).then((rt)=>{
+                    let rtn = rt.message;
+
+                    this.$set(this.dt,'rows', rtn.rows);
+                    this.$set(this.dt,'columns', _.map(rtn.columns, (v)=>{
+                                        
+                    if(_.isUndefined(v.visible)){
+                        _.extend(v, { visible: true });
+                    }
+
+                    if(!v.render){
+                        return v;
+                    } else {
+                        return _.extend(v, { render: eval(v.render) });
+                    }
+                    
+                    }));
+
+                    this.$nextTick(()=>{
+                        this.$refs.table.doLayout();
+                    })
+                    this.dt.loading = false;
+                }).catch(err=>{
+                    console.error(err);
+                    this.dt.loading = false;
+                });
             }
         }
     }
@@ -238,11 +366,6 @@
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-  
-  .el-header{
-    height: 40px!important;
-    line-height: 40px!important;
-  }
 
   .el-table /deep/ .el-textarea__inner{
       border: unset;

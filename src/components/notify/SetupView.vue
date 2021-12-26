@@ -29,6 +29,7 @@
                         </el-radio-group>
                     </el-form-item>
                   </template>
+
                   <el-form-item label="重试间隔" prop="retry_interval">
                     <el-input-number v-model="rtype.base.retry_interval"></el-input-number>
                   </el-form-item>
@@ -43,6 +44,18 @@
                     <el-checkbox v-model="rtype.email.status">{{rtype.email.name}}</el-checkbox>
                     <el-checkbox v-model="rtype.sms.status">{{rtype.sms.name}}</el-checkbox>
                     <el-checkbox v-model="rtype.wechat.status">{{rtype.wechat.name}}</el-checkbox>
+                  </el-form-item>
+
+                  <el-divider content-position="left">发送后动作</el-divider>
+                  
+                  <el-form-item label="发送后命令" prop="send_fields_name">
+                    <el-input v-model="rtype.base.send_fields.name"></el-input>
+                  </el-form-item>
+                  <el-form-item label="发送后命令路径" prop="send_fields_path">
+                    <el-input v-model="rtype.base.send_fields.path"></el-input>
+                  </el-form-item>
+                  <el-form-item label="发送后命令参数" prop="send_fields_params">
+                    <el-input v-model="rtype.base.send_fields.params"></el-input>
                   </el-form-item>
 
                 </el-form>

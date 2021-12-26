@@ -55,7 +55,7 @@
                     </div>
 
                     <div style="height:30px;line-height:30px;" v-else-if="item.field === 'rtype'">
-                        <el-tag v-for="subItem in scope.row[item.field]" :key="subItem" v-if="scope.row[item.field]" style="margin-left:5px;">{{subItem}}</el-tag>
+                        <el-tag class="el-icon-mobile-phone" v-for="subItem in scope.row[item.field]" :key="subItem" v-if="scope.row[item.field]" style="margin-left:5px;"> {{ getRtypeTitleByName(subItem) }}</el-tag>
                     </div>
                     
                     <div v-html='item.render(scope.row, scope.column, scope.row[item.field], scope.$index)' 
@@ -141,7 +141,7 @@
                 :value="item.id">
                 <span style="float: left">{{ item.name }}</span>
                 <span style="float: right; color: #8492a6; font-size: 8px">
-                  <span class="el-icon-tickets" style="color:#999;font-size:8px;padding-left: 5px;" v-if="item.situation"> {{ item.situation }}</span>
+                  <span class="el-icon-tickets" style="color:#999;font-size:8px;padding-left: 5px;text-overflow: ellipsis;overflow: hidden;white-space: nowrap;width: 40vw;" v-if="item.situation"> {{ item.situation }}</span>
                 </span>
               </el-option>
             </el-select>
@@ -229,7 +229,7 @@
                         :value="item.id">
                         <span style="float: left">{{ item.name }}</span>
                         <span style="float: right; color: #8492a6; font-size: 8px">
-                          <span class="el-icon-tickets" style="color:#999;font-size:8px;padding-left: 5px;" v-if="item.situation"> {{ item.situation }}</span>
+                          <span class="el-icon-tickets" style="color:#999;font-size:8px;padding-left: 5px;text-overflow: ellipsis;overflow: hidden;white-space: nowrap;width: 40vw;" v-if="item.situation"> {{ item.situation }}</span>
                         </span>
                       </el-option>
                     </el-select>
@@ -428,6 +428,14 @@ export default {
      this.init();
   },
   methods: {
+    getRtypeTitleByName(val){
+      try{
+        return _.find(this.rtype.list,{name:val}).title;
+      }catch(err){
+        console.error(err);
+        return "";
+      }
+    },
     initData(){
       this.m3.callFS("/matrix/m3event/notify/getRuleList.js").then((rt)=>{
         
@@ -535,11 +543,6 @@ export default {
     },
     onSave(){
 
-        let param = encodeURIComponent(JSON.stringify({
-                    action: 'add',
-                    model: this.dialog.rule.new.data
-                  }));
-        
         if(_.isEmpty(this.dialog.rule.new.data.name)){
           this.$message.warning("请输入名称");
           return false;
@@ -562,23 +565,50 @@ export default {
 
         this.dialog.rule.new.loading = true;
 
-        this.m3.callFS("/matrix/m3event/notify/ruleAction.js",param).then(()=>{
-          
-          this.$message({
-            type: "success",
-            message: "新建策略成功"
-          })
-          this.onReset('new');
-          this.initData();
-          this.dialog.rule.new.loading = false;
-          this.dialog.rule.new.show = false;
+        let check = encodeURIComponent(JSON.stringify({
+                    action: 'check',
+                    model: this.dialog.rule.new.data
+                  }));
+
+        this.m3.callFS("/matrix/m3event/notify/ruleAction.js",check).then(rtn=>{
+
+          if(rtn.message){
+
+            this.$message.warning("通知策略名称已存在，请确认");
+            this.dialog.rule.new.loading = false;
+            return false;
+
+          } else{
+
+            let param = encodeURIComponent(JSON.stringify({
+                    action: 'add',
+                    model: this.dialog.rule.new.data
+                  }));
+
+            this.m3.callFS("/matrix/m3event/notify/ruleAction.js",param).then(()=>{
+              
+              this.$message({
+                type: "success",
+                message: "新建策略成功"
+              })
+              this.onReset('new');
+              this.initData();
+              this.dialog.rule.new.loading = false;
+              this.dialog.rule.new.show = false;
+
+            }).catch(err=>{
+              this.$message({
+                type: "error",
+                message: "新建策略失败 " + err
+              })
+            });
+          }
 
         }).catch(err=>{
-          this.$message({
-            type: "error",
-            message: "新建策略失败 " + err
-          })
-        });
+            console.error(err);
+        })
+          
+
     },
     onDelete(item){
       
