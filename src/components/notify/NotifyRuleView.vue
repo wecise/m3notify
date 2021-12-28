@@ -430,7 +430,8 @@ export default {
   methods: {
     getRtypeTitleByName(val){
       try{
-        return _.find(this.rtype.list,{name:val}).title;
+        let o = _.find(this.rtype.list,{name:val});
+        return o?o.title:val;
       }catch(err){
         console.error(err);
         return "";
@@ -571,7 +572,7 @@ export default {
                   }));
 
         this.m3.callFS("/matrix/m3event/notify/ruleAction.js",check).then(rtn=>{
-
+          
           if(rtn.message){
 
             this.$message.warning("通知策略名称已存在，请确认");
