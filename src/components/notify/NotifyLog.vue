@@ -215,8 +215,8 @@
             pickPeople(val){
                 try{
                     return val.map(v=>{
-                        return v.split(",")[0]}
-                    ).sort().join(" ")
+                        return v[0];
+                    }).sort().join(" ")
                 }catch(err){
                     console.error(err);
                     return null;

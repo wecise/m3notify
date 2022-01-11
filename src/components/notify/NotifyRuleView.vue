@@ -647,7 +647,7 @@ export default {
       })
     },
     onEdit(item){
-      this.dialog.rule.edit.data = _.cloneDeep(item);
+      this.dialog.rule.edit.data = JSON.parse(JSON.stringify(item));
       _.extend(this.dialog.rule.edit.data, {template: _.find(this.templates.list, {name: _.keys(item.template)[0]})});
       this.dialog.rule.edit.show = true;
     },
@@ -697,8 +697,10 @@ export default {
           this.dialog.rule.edit.loading = false;
         });
     },
-    onToggleStatus(row){
+    onToggleStatus(data){
       
+      let row = JSON.parse(JSON.stringify(data));
+
       let template = _.find(this.templates.list, {value:row.template});
 
       this.$set(row,'template',template);
