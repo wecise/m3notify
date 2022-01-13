@@ -1,6 +1,6 @@
 <template>
     <el-container>
-        <el-header style="height:40px;line-height:40px;text-align:right;display:flex;">
+        <el-header style="height:40px;line-height:40px;text-align:right;display:flex;background:#f2f2f2;">
             
             <div style="display:none;">
                 <el-input v-model="filterText" placeholder="关键字" style="width:100%;" clearable>

@@ -1,27 +1,32 @@
 <template>
     <el-container style="height:100%;">
-        <el-header style="height:40px;line-height:40px;">
-            <el-tooltip content="切换视图" open-delay="800" placement="top">
-                <el-button type="text" icon="el-icon-s-fold" @click="onTogglePanel"></el-button>
-            </el-tooltip>
-            <el-tooltip content="刷新" open-delay="800" placement="top">
-                <el-button type="text" icon="el-icon-refresh" @click="onRefresh"></el-button>
-            </el-tooltip>
-            <el-tooltip content="导出" delay-time="500">
-                <el-dropdown @command="onExport">
-                    <span class="el-dropdown-link">
-                        <i class="el-icon-download el-icon--right"></i>
-                    </span>
-                    <el-dropdown-menu slot="dropdown">
-                        <el-dropdown-item command="csv">CSV</el-dropdown-item>
-                        <el-dropdown-item command="json">JSON</el-dropdown-item>
-                        <!--el-dropdown-item command="pdf">PDF</el-dropdown-item-->
-                        <el-dropdown-item command="png">PNG</el-dropdown-item>
-                        <!--el-dropdown-item command="sql">SQL</el-dropdown-item-->
-                        <el-dropdown-item command="xls">XLS (Excel 2000 HTML format)</el-dropdown-item>
-                    </el-dropdown-menu>
-                </el-dropdown>
-            </el-tooltip>
+        <el-header style="height:40px;line-height:40px;display:flex;background:#f2f2f2;">
+            <span style="width:70%;">
+                <el-tooltip content="切换视图" open-delay="800" placement="top">
+                    <el-button type="text" icon="el-icon-s-fold" @click="onTogglePanel"></el-button>
+                </el-tooltip>
+                <el-tooltip content="刷新" open-delay="800" placement="top">
+                    <el-button type="text" icon="el-icon-refresh" @click="onRefresh"></el-button>
+                </el-tooltip>
+                <el-tooltip content="导出" delay-time="500">
+                    <el-dropdown @command="onExport">
+                        <span class="el-dropdown-link">
+                            <i class="el-icon-download el-icon--right"></i>
+                        </span>
+                        <el-dropdown-menu slot="dropdown">
+                            <el-dropdown-item command="csv">CSV</el-dropdown-item>
+                            <el-dropdown-item command="json">JSON</el-dropdown-item>
+                            <!--el-dropdown-item command="pdf">PDF</el-dropdown-item-->
+                            <el-dropdown-item command="png">PNG</el-dropdown-item>
+                            <!--el-dropdown-item command="sql">SQL</el-dropdown-item-->
+                            <el-dropdown-item command="xls">XLS (Excel 2000 HTML format)</el-dropdown-item>
+                        </el-dropdown-menu>
+                    </el-dropdown>
+                </el-tooltip>
+            </span>
+            <span style="width:30%;text-align:right;">
+                <el-input v-model="dt.term" placeholder="关键字过滤" size="mini" clearable></el-input>
+            </span>
         </el-header>   
         <el-main style="padding:0px;overflow:hidden;">
             <el-table
@@ -70,9 +75,7 @@
                     </el-table-column>
                 </template>
                 <el-table-column label="操作" width="160" fixed="right">
-                    <template slot="header" slot-scope="scope">
-                        <el-input v-model="dt.term" placeholder="关键字" clearable></el-input>
-                    </template>
+                    
                     <template slot-scope="scope">
                         <div v-if="scope.row.username.includes(['/','system','admin'])">
                             
@@ -81,12 +84,8 @@
                             <!--el-tooltip content="授权" open-delay="800" placement="top">
                                 <el-button type="text" icon="el-icon-s-check" @click="onToogleExpand(scope.row, scope.$index, 'userPermission')"></el-button>
                             </el-tooltip-->
-                            <el-tooltip content="编辑" open-delay="800" placement="top">
-                                <el-button type="text" icon="el-icon-edit" @click="onUpdateUser(scope.row,scope.$index)"></el-button>
-                            </el-tooltip>
-                            <el-tooltip content="删除" open-delay="800" placement="top">
-                                <el-button type="text" @click="onDeleteUser(scope.row, scope.$index)" icon="el-icon-delete" v-if="!scope.row.fullname.includes(['/系统组','/'])"></el-button>
-                            </el-tooltip>
+                            <el-button type="text" icon="el-icon-edit" @click="onUpdateUser(scope.row,scope.$index)">编辑</el-button>
+                            <el-button type="text" icon="el-icon-delete" @click="onDeleteUser(scope.row, scope.$index)" v-if="!scope.row.fullname.includes(['/系统组','/'])">删除</el-button>
                         </div>
                         <div v-else>
                             <!--el-tooltip content="授权" open-delay="800" placement="top">

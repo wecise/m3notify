@@ -6,7 +6,7 @@
                     <el-input v-model="search.id" clearable></el-input>
                 </el-form-item> -->
                 <el-form-item label="接收人">
-                    <el-input v-model="search.person" clearable></el-input>
+                    <el-input v-model="dt.filter" clearable></el-input>
                 </el-form-item>
                 <el-form-item label="时间区间">
                     <el-date-picker
@@ -62,7 +62,7 @@
                                         trigger="click">
                                         <el-container>
                                             <el-main v-if="scope.row[item.field]">
-                                                <el-input type="textarea" :value="scope.row[item.field].join('\n')" :rows="6" style="width:98%;white-space:nowrap;"></el-input>
+                                                <el-input type="textarea" :value="scope.row[item.field] | pickPeopleInfo" :rows="6" style="width:98%;white-space:nowrap;"></el-input>
                                             </el-main>
                                         </el-container>
                                         <el-button type="text" slot="reference"><i class="el-icon-user"></i> {{ scope.row[item['field']] | pickPeople }}</el-button>
@@ -87,10 +87,7 @@
                         </template>
                     </el-table-column>
                 </template>
-                <el-table-column label="操作" width="120" fixed="right">
-                    <template slot="header" slot-scope="scope">
-                        <el-input v-model="dt.filter" clearable placeholder="关键字"></el-input>
-                    </template>
+                <!-- <el-table-column label="操作" width="120" fixed="right">
                     <template slot-scope="scope" >
                         <el-popover
                             width="300"
@@ -104,10 +101,10 @@
                                 {{scope.row['sendstatus']==='ok'?'发送成功':'发送失败'}}
                             </el-button>
                         </el-popover>
-                        <!--el-button type="text" @click="onLookContent(scope.row)"><i class="el-icon-tickets"></i>  查看详情</el-button-->
-                        <!-- <el-button type="text" @click="onDelete(scope.$index, scope.row)"> 删除</el-button> -->
+                        <el-button type="text" @click="onLookContent(scope.row)"><i class="el-icon-tickets"></i>  查看详情</el-button>
+                        <<el-button type="text" @click="onDelete(scope.$index, scope.row)"> 删除</el-button>
                     </template>
-                </el-table-column>
+                </el-table-column-->
             </el-table>
         </el-main>
         <el-footer style="height:40px;line-height:40px;background:#f2f2f2;">
@@ -212,10 +209,20 @@
             }
         },
         filters:{
+            pickPeopleInfo(val){
+                try{
+                    return val.map(v=>{
+                        return [v.firstname+v.lastname,v.mobile].join(",");
+                    }).sort().join(" ")
+                }catch(err){
+                    console.error(err);
+                    return null;
+                }
+            },
             pickPeople(val){
                 try{
                     return val.map(v=>{
-                        return v[0];
+                        return v.firstname+v.lastname;
                     }).sort().join(" ")
                 }catch(err){
                     console.error(err);

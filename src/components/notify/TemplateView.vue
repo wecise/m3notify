@@ -1,14 +1,19 @@
 <template>
   <el-container style="height:calc(100vh - 135px);" @mouseover.native="onLayout">
-    <el-header style="position:relative;height: 40px!important;line-height: 40px!important;">
-      <el-tooltip content="刷新模板">
-        <el-button type="text" icon="el-icon-refresh" @click="onRefresh"></el-button>
-      </el-tooltip>
-      <el-tooltip content="新建模板">
-        <el-button type="text" icon="el-icon-plus" @click="onNew"></el-button>
-      </el-tooltip>
+    <el-header style="position:relative;line-height: 60px;display:flex;">
+      <span style="width:70%;">
+        <el-tooltip content="刷新模板">
+          <el-button type="text" icon="el-icon-refresh" @click="onRefresh"></el-button>
+        </el-tooltip>
+        <el-tooltip content="新建模板">
+          <el-button type="success" icon="el-icon-plus" @click="onNew" size="mini">新建模板</el-button>
+        </el-tooltip>
+      </span>
+      <span style="width:30%;text-align:right;">
+          <el-input v-model="dt.search" clearable placeholder="关键字过滤" size="mini"></el-input>
+      </span>
     </el-header>
-    <el-main>
+    <el-main style="padding-top:0px;">
       <el-table
         v-loading="dt.loading"
         element-loading-spinner="el-icon-loading"
@@ -42,13 +47,10 @@
                 </template>
             </el-table-column>
         </template>
-        <el-table-column label="操作" width="220" fixed="right">
-            <template slot="header" slot-scope="scope">
-                <el-input v-model="dt.search" clearable placeholder="关键字"></el-input>
-            </template>
+        <el-table-column label="操作" width="160" fixed="right">
             <template slot-scope="scope">
-              <el-button type="text" @click="onEdit(scope.row)"> 编辑</el-button>
-              <el-button type="text" @click="onDelete(scope.row)"> 删除</el-button>
+              <el-button type="text" icon="el-icon-edit" @click="onEdit(scope.row)"> 编辑</el-button>
+              <el-button type="text" icon="el-icon-delete" @click="onDelete(scope.row)"> 删除</el-button>
               <el-switch v-model="scope.row['status']" 
                   active-color="#13ce66" 
                   inactive-color="#ff4949"
@@ -106,23 +108,6 @@
                           <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成通知模版</span>
                   </el-form-item>
                   
-                  <el-form-item label="开启抑制策略">
-                    <el-switch v-model="dialog.new.data.content.compression.enable"
-                      active-color="#13ce66"
-                      :active-value="true"
-                      :inactive-value="false"></el-switch>
-                      <div v-if="dialog.new.data.content.compression.enable">
-                        <DataFieldsView :fields="dialog.template.datasource.fields" 
-                              @fields-change="onCompressionFieldsSelect($event,'new')"
-                              @node-click="onCompressionFieldsSelect($event,'new')"
-                              style="width:50%"></DataFieldsView>
-                              <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成抑制主键</span>
-                        <p>
-                          <el-input-number v-model="dialog.new.data.content.compression.timer" :min="0"></el-input-number>
-                          <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 抑制时间窗口(单位：秒)</span>
-                        </p>
-                      </div>
-                  </el-form-item>
                   <el-form-item label="HTML支持" prop="content">
                       <el-switch v-model="dialog.new.data.content.html"
                         active-color="#13ce66"
@@ -146,6 +131,32 @@
                         ></VueEditor>
                       </span>
                   </el-form-item>
+
+                  <el-form-item label="开启抑制策略">
+                    <el-switch v-model="dialog.new.data.content.compression.enable"
+                      active-color="#13ce66"
+                      :active-value="true"
+                      :inactive-value="false"></el-switch>
+                      <div v-if="dialog.new.data.content.compression.enable">
+                        <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成抑制主键</span>
+                        <br>
+                        <DataFieldsView :fields="dialog.template.datasource.fields" 
+                              @fields-change="onCompressionFieldsSelect($event,'new')"
+                              @node-click="onCompressionFieldsSelect($event,'new')"
+                              style="width:50%"></DataFieldsView>
+                        <p>
+                          <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 抑制时间窗口(单位：秒)</span>
+                          <br>
+                          <el-input-number v-model="dialog.new.data.content.compression.timer" :min="0"></el-input-number>
+                        </p>
+                        <p>
+                          <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 抑制告警消息模版</span>
+                          <br>
+                          <el-input type="textarea" :rows="2" v-model="dialog.new.data.content.compression.template"></el-input>
+                        </p>
+                      </div>
+                  </el-form-item>
+
                 </template>
                 
                 <el-form-item label="是否启用" prop="status" style="display:none;">
@@ -237,33 +248,13 @@
                           :selected="dialog.edit.data.content.fields"
                           style="width:50%"></DataFieldsView>
                         <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成通知模版</span>
-                  </el-form-item>
+                </el-form-item>
                   
-                  <el-form-item label="HTML支持" prop="content">
-                      <el-switch v-model="dialog.edit.data.content.html"
-                        active-color="#13ce66"
-                        :active-value="true"
-                        :inactive-value="false"></el-switch>
-                  </el-form-item>
-
-                <el-form-item label="开启抑制策略" v-if="dialog.template.datasource.class">
-                  <el-switch v-model="dialog.edit.data.content.compression.enable"
-                        active-color="#13ce66"
-                        :active-value="true"
-                        :inactive-value="false"
-                        size="mini"></el-switch>
-                  <div v-if="dialog.edit.data.content.compression.enable" style="padding:20px;background:#ffffff;">
-                    <DataFieldsView :fields="dialog.template.datasource.fields" 
-                          @fields-change="onCompressionFieldsSelect($event,'edit')"
-                          @node-click="onCompressionFieldsSelect($event,'edit')"
-                          :selected="dialog.edit.data.content.compression.keys"
-                          style="width:50%"></DataFieldsView>
-                          <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成抑制主键</span>
-                    <p>
-                      <el-input-number v-model="dialog.edit.data.content.compression.timer" :min="0" :step="5"></el-input-number>
-                      <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 抑制时间窗口(单位：秒)</span>
-                    </p>
-                  </div>
+                <el-form-item label="HTML支持" prop="content">
+                    <el-switch v-model="dialog.edit.data.content.html"
+                      active-color="#13ce66"
+                      :active-value="true"
+                      :inactive-value="false"></el-switch>
                 </el-form-item>
                 
                 <el-form-item label="自定义模版">
@@ -281,6 +272,32 @@
                         ref="editorRef"
                     ></VueEditor>
                   </span>
+                </el-form-item>
+
+                <el-form-item label="开启抑制策略" v-if="dialog.template.datasource.class">
+                  <el-switch v-model="dialog.edit.data.content.compression.enable"
+                        active-color="#13ce66"
+                        :active-value="true"
+                        :inactive-value="false"
+                        size="mini"></el-switch>
+                  <div v-if="dialog.edit.data.content.compression.enable" style="padding:20px;background:#ffffff;">
+                    <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 选择属性用来生成抑制主键</span>
+                    <br>
+                    <DataFieldsView :fields="dialog.template.datasource.fields" 
+                          @fields-change="onCompressionFieldsSelect($event,'edit')"
+                          @node-click="onCompressionFieldsSelect($event,'edit')"
+                          :selected="dialog.edit.data.content.compression.keys"
+                          style="width:50%"></DataFieldsView>
+                    <p>
+                      <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 抑制时间窗口(单位：秒)</span>
+                      <br>
+                      <el-input-number v-model="dialog.edit.data.content.compression.timer" :min="0" :step="5"></el-input-number>
+                    </p>
+                    <p>
+                      <span style="color:#999;font-size:8px;padding-left:10px;"><i class="el-icon-question"></i> 抑制告警消息模版</span>
+                      <el-input type="textarea" :rows="2" v-model="dialog.edit.data.content.compression.template"></el-input>
+                    </p>
+                  </div>
                 </el-form-item>
 
                 <el-form-item label="是否启用" prop="status" style="display:none;">
@@ -384,7 +401,9 @@ export default {
               compression:{
                 enable: false,
                 keys: [],
-                timer: 0
+                timer: 0,
+                disenable_expired_send: true,
+                template: "Host {{.host}} test alert message: {{.msg}} Template compression count: {{.count}}"
               },
               template: "",
               html: false
@@ -412,7 +431,9 @@ export default {
                 compression:{
                   enable: false,
                   keys: [],
-                  timer: 0
+                  timer: 0,
+                  disenable_expired_send: true,
+                  template: ""
                 },
                 template: "",
                 html: false
@@ -522,12 +543,14 @@ export default {
         this.dialog.new.data.content.compression.keys = [];
         this.dialog.new.data.content.compression.timer = 0;
       }
+      this.dialog.new.data.content.compression.disenable_expired_send = !val;
     },
     'dialog.edit.data.content.compression.enable'(val){
       if(!val){
         this.dialog.edit.data.content.compression.keys = [];
         this.dialog.edit.data.content.compression.timer = 0;
       }
+      this.dialog.edit.data.content.compression.disenable_expired_send = !val;
     },
     'dialog.new.data.content.compression.timer'(val){
       if(val === 0){
@@ -707,7 +730,9 @@ export default {
                 compression:{
                   enable: false,
                   keys: [],
-                  timer: 0
+                  timer: 0,
+                  disenable_expired_send: true,
+                  template: "Host {{.host}} test alert message: {{.msg}} Template compression count: {{.count}}"
                 },
                 template: "",
                 html: false
@@ -785,18 +810,25 @@ export default {
       })
     },
     onEdit(item){
+      
+      this.dialog.edit.show = true;
+
       this.dialog.edit.data.name = item.title;
       this.dialog.edit.data.attr = item.attr;
-      this.dialog.edit.show = true;
+      
       let content = JSON.parse(item.content);
       
       this.$set(this.dialog.edit.data,'content',content);
       this.dialog.template.datasource.class = content.class;
       
-      setTimeout(()=>{
-        let node = this.$refs.datasourceEditRef.$refs.tree.getNode(content.class);
-        this.dialog.template.datasource.fields = node.data.fields;
-      },1500)
+      this.$nextTick(()=>{
+        setTimeout(()=>{
+          let node = this.$refs['datasourceEditRef'].$refs['tree'].getNode(content.class);
+          this.dialog.template.datasource.fields = node.data.fields;
+        },2000)
+      })
+
+      
     },
     onUpdate(){
 

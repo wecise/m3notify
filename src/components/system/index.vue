@@ -1,6 +1,6 @@
 <template>
     <Split :gutterSize="5" style="border:1px solid #ddd;">
-        <SplitArea :size="20" :minSize="0" style="overflow:hidden;background: #f2f2f2;">
+        <SplitArea :size="20" :minSize="0" style="overflow:hidden;">
             <ldapMange root="/" @update:selectedNode="onLoadUser($event)" ref="ldapManage"></ldapMange>
         </SplitArea>
         <SplitArea :size="80" :minSize="0" style="overflow:hidden;">

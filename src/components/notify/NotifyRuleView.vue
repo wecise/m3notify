@@ -1,20 +1,25 @@
 <template>
   <el-container style="height: calc(100vh - 135px);">
-    <el-header style="height: 40px!important;line-height: 40px!important;position:relative;">
-      <el-tooltip content="刷新">
-        <el-button type="text" icon="el-icon-refresh" @click="onRefresh"></el-button>
-      </el-tooltip>
-      <el-tooltip content="新建策略">
-        <el-button type="text" icon="el-icon-plus" @click="onNew"></el-button>
-      </el-tooltip>
-      <!--el-tooltip content="导出策略">
-        <el-button type="text" icon="el-icon-upload2"></el-button>
-      </el-tooltip>
-      <el-tooltip content="导入策略">
-        <el-button type="text" icon="el-icon-download"></el-button>
-      </el-tooltip-->
+    <el-header style="line-height: 60px;position:relative;display:flex;">
+      <span style="width:70%;">
+        <el-tooltip content="刷新">
+          <el-button type="text" icon="el-icon-refresh" @click="onRefresh"></el-button>
+        </el-tooltip>
+        <el-tooltip content="新建策略">
+          <el-button type="success" icon="el-icon-plus" @click="onNew" size="mini">新建策略</el-button>
+        </el-tooltip>
+        <!--el-tooltip content="导出策略">
+          <el-button type="text" icon="el-icon-upload2"></el-button>
+        </el-tooltip>
+        <el-tooltip content="导入策略">
+          <el-button type="text" icon="el-icon-download"></el-button>
+        </el-tooltip-->
+      </span>
+      <span style="width:30%;text-align:right;">
+          <el-input v-model="dt.search" clearable placeholder="关键字过滤" size="mini"></el-input>
+      </span>
     </el-header>
-    <el-main>
+    <el-main style="padding-top:0px;">
       <el-table
         v-loading="dt.loading"
         element-loading-spinner="el-icon-loading"
@@ -69,18 +74,16 @@
                 </template>
             </el-table-column>
         </template>
-        <el-table-column label="操作" width="160" fixed="right">
-          <template slot="header" slot-scope="scope">
-              <el-input v-model="dt.search" clearable placeholder="关键字"></el-input>
-          </template>
+        <el-table-column label="操作" width="180" fixed="right">
           <template slot-scope="scope">
-            <el-button type="text"  @click="onEdit(scope.row)"> 编辑</el-button>
-            <el-button type="text"  @click="onDelete(scope.row)" :loading="loading"> 删除</el-button>
+            <el-button type="text"  icon="el-icon-edit" @click="onEdit(scope.row)"> 编辑</el-button>
+            <el-button type="text"  icon="el-icon-delete" @click="onDelete(scope.row)" :loading="loading"> 删除</el-button>
             <el-switch v-model="scope.row['status']" 
               active-color="#13ce66" 
               inactive-color="#ff4949"
               :active-value="1"
               :inactive-value="0"
+              size="mini"
               style="padding-left:10px;"
               @change="onToggleStatus(scope.row)"></el-switch>
           </template>
